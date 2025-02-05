@@ -2,6 +2,8 @@ package iio
 
 // #cgo pkg-config: libiio
 // #include <iio.h>
+// #include <stdlib.h>
+
 import (
 	"C"
 	"fmt"
@@ -38,7 +40,7 @@ func StrError(err_type int) (string, error) {
  * @return True if the backend is available, false otherwise */
 func HasBackend(params *ContextParamsHandle, backend string) (bool, error) {
 	var err error
-	var res C.bool
+	var res C._Bool
 	c_str := unsafe.StringData(backend)
 
 	res = C.iio_has_backend(params.handle, c_str)

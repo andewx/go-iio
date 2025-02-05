@@ -1,75 +1,92 @@
 package iio
 
-//cgo: pkg-config
-//#include <iio.h>
-
-import(
-  "C"
-  "fmt"
+// #cgo pkg-config: libiio
+// #include <iio.h>
+// #include <stdlib.h>
+import "C"
+import (
+	"unsafe"
 )
 
-/** @brief Retrieve a pointer to the iio_context structure
- * @param dev A pointer to an iio_device structure
- * @return A pointer to an iio_context structure */
-func DeviceGetContext(dev *Device)(*Context,error){
-  var err error
-  var ctx *Context
-  ctx = C.iio_device_get_context(dev.handle)
-  if(ctx == nil){
-    err = fmt.printf("Error getting context from device\n")
-  }
-  return ctx,err
+// Device represents an IIO device
+type Device struct {
+	handle *C.struct_iio_device
 }
 
-/** @brief Retrieve the device ID (e.g. <b><i>iio:device0</i></b>)
- * @param dev A pointer to an iio_device structure
- * @return A pointer to a static NULL-terminated string */
-func DeviceGetId(dev *Device)(string, error){
-  var err error
-  var str string
-  var strLen int
-
-  res := C.iio_device_get_name(dev.handle)
-  if res == nil{
-    err = fmt.Errorf("Device id not found") 
-    return "",err    
-  }
-  strLen = C.strlen(res)
-  str = unsafe.String(res,strLen)
-  return str, nil
+// GetName returns the name of the device
+func (dev *Device) GetName() string {
+	name := C.iio_device_get_name(dev.handle)
+	if name == nil {
+		return ""
+	}
+	return C.GoString(name)
 }
 
-
-/** @brief Retrieve the device label (e.g. <b><i>lo_pll0_rx_adf4351</i></b>)
- * @param dev A pointer to an iio_device structure
- * @return A pointer to a static NULL-terminated string
- *
- * <b>NOTE:</b> if the device has no label, NULL is returned. */
-func DeviceGetLabel(dev *Device)(string, error){
-  var err error
-  var str string
-  var strLen int
-
-  res := C.iio_device_get_label(dev.handle)
-  if res == nil{
-    err = fmt.Errorf("Device id not found") 
-    return "",err    
-  }
-  strLen = C.strlen(res)
-  str = unsafe.String(res,strLen)
-  return str, nil
+// GetID returns the ID of the device
+func (dev *Device) GetID() string {
+	return C.GoString(C.iio_device_get_id(dev.handle))
 }
 
-
-/** @brief Enumerate the channels of the given device
- * @param dev A pointer to an iio_device structure
- * @return The number of channels found */
-func DeviceGetChannelsCount(dev *Device)(int){
-  return int(C.iio_device_get_channels_count(dev.handle))
+// GetChannelsCount returns the number of channels the device has
+func (dev *Device) GetChannelsCount() uint {
+	return uint(C.iio_device_get_channels_count(dev.handle))
 }
 
+// GetChannel returns the channel at the specified index
+func (dev *Device) GetChannel(index uint) (*Channel, error) {
+	handle := C.iio_device_get_channel(dev.handle, C.uint(index))
+	if handle == nil {
+		return nil, getLastError()
+	}
+	return &Channel{handle: handle}, nil
+}
 
+// GetAttr returns the value of the specified attribute
+func (dev *Device) GetAttr(name string) (string, error) {
+	cName := C.CString(name)
+	defer C.free(unsafe.Pointer(cName))
+	var value *C.char
+	ret := C.iio_device_attr_read(dev.handle, cName, &value)
+	if ret < 0 {
+		return "", getError(ret)
+	}
+	return C.GoString(value), nil
+}
 
+// SetAttr sets the value of the specified attribute
+func (dev *Device) SetAttr(name, value string) error {
+	cName := C.CString(name)
+	defer C.free(unsafe.Pointer(cName))
+	cValue := C.CString(value)
+	defer C.free(unsafe.Pointer(cValue))
+	ret := C.iio_device_attr_write(dev.handle, cName, cValue)
+	if ret < 0 {
+		return getError(ret)
+	}
+	return nil
+}
 
+// GetDebugAttr returns the value of the specified debug attribute
+func (dev *Device) GetDebugAttr(name string) (string, error) {
+	cName := C.CString(name)
+	defer C.free(unsafe.Pointer(cName))
+	var value *C.char
+	ret := C.iio_device_debug_attr_read(dev.handle, cName, &value)
+	if ret < 0 {
+		return "", getError(ret)
+	}
+	return C.GoString(value), nil
+}
 
-
+// SetDebugAttr sets the value of the specified debug attribute
+func (dev *Device) SetDebugAttr(name, value string) error {
+	cName := C.CString(name)
+	defer C.free(unsafe.Pointer(cName))
+	cValue := C.CString(value)
+	defer C.free(unsafe.Pointer(cValue))
+	ret := C.iio_device_debug_attr_write(dev.handle, cName, cValue)
+	if ret < 0 {
+		return getError(ret)
+	}
+	return nil
+}
