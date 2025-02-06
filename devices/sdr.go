@@ -16,6 +16,10 @@ const (
 	ModulationQAM
 )
 
+const (
+	RING_BUFFER_PARTITIONS = 8
+)
+
 // SDRConfig represents SDR-specific configuration
 type SDRConfig struct {
 	Modulation  ModulationType
@@ -26,25 +30,31 @@ type SDRConfig struct {
 	SampleRate float64  // Calculated Baseband Sampling Rate
 	ModIndex    float64 // Modulation index for FM
 	QAMOrder    int     // QAM constellation order (4, 16, 64, etc.)
-	PSKOrder    int     // PSK constellation order (2, 4, 8, etc.)
+	PSKOrder    int     // PSK constellation order (2, 4, 8, etc.
+	SampleBitDepth int   // Bits Per Sample
+	FFTSize        int    //FFT Size
 }
 
 type SDR struct {
 	ctx *iio.Context
-	dev *iio.Device
-	rx  *iio.Device
-	tx  *iio.Device
-	buf *iio.Buffer
+	stream *iio.Stream
 	config SDRConfig
 	name string
 }
 
 
-func NewNetworkSDR(host string. deviceName string) (*SDR, error) {
-	ctx, err := iio.CreateNetworkContext(host)
+func NewNetworkSDR(host string. name string, config SDRConfig, enableChannels []bool) (*SDR, error) {
+	bytesPerSample := int(config.SampleBitDepth / 4)
+	if (config.SampleBitDepth %4 > 0){
+		bytesPerSample = bytesPerSample + 1
+	}
+	bufferSize := config.FFTSize * bytesPerSample * RING_BUFFER_PARTITIONS;
+	devConfig := iio.DeviceConfig{SampleRate: config.SampleRate, BufferSize:bufferSize, Channels: enableChannels, IsCyclic:false; Trigger:""}
+	ctx, strm, err := iio.NewNetworkDevice(host,deviceName, )
 	if err != nil {
 		return nil, err
 	}
+	
 	return &SDR{ctx: ctx, name: deviceName}, nil
 }
 
