@@ -43,7 +43,7 @@ type SDR struct {
 }
 
 
-func NewNetworkSDR(host string. name string, config SDRConfig, enableChannels []bool) (*SDR, error) {
+func (s *SDR) Connect(host string. name string, config SDRConfig, enableChannels []bool) (error) {
 	bytesPerSample := int(config.SampleBitDepth / 4)
 	if (config.SampleBitDepth %4 > 0){
 		bytesPerSample = bytesPerSample + 1
@@ -54,11 +54,12 @@ func NewNetworkSDR(host string. name string, config SDRConfig, enableChannels []
 	if err != nil {
 		return nil, err
 	}
-	
-	return &SDR{ctx: ctx, name: deviceName}, nil
+	s.ctx = ctx
+	s.stream = strm
+	return nil
 }
 
-func (s *SDR)ConfigureSDR(symbolRate float64, nyquistRate float64, alphaFreq float64, carrierFreq float64, modIndex float64, qamOrder uint, pskOrder uint ){
+func NewSDR(symbolRate float64, sampleBitDepth int, fft_size int, nyquistRate float64, alphaFreq float64, carrierFreq float64, modIndex float64, qamOrder uint, pskOrder uint )(*SDR, error){
 	if nyquistRate < 2.0{
 		nyquistRate = 2.0
 	}
@@ -74,8 +75,9 @@ func (s *SDR)ConfigureSDR(symbolRate float64, nyquistRate float64, alphaFreq flo
 	if alphaFreq <= 0 || alphaFreq >= 1.0{
 		alphaFreq = 0.5
 	}
-	config := SDRConfig{SymbolRate:symbolRate, FilterAlpha:alphaFreq, CarrierFrequency:carrierFreq, SampleRate: nyquistRate*(symbolRate + FrequencyOffset), ModIndex: modIndex; QAMOrder:qamOrder; PSKOrder:pskOrder }
-	s.config = config
+
+	config := SDRConfig{SymbolRate:symbolRate, SampleBitDepth:sampleBitDepth, FFTSize: fft_size, FilterAlpha:alphaFreq, CarrierFrequency:carrierFreq, SampleRate: nyquistRate*(symbolRate + FrequencyOffset), ModIndex: modIndex; QAMOrder:qamOrder; PSKOrder:pskOrder }
+	return &SDR{config:config}, nil
 }
 
 
