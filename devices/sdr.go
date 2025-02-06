@@ -21,7 +21,9 @@ type SDRConfig struct {
 	Modulation  ModulationType
 	SymbolRate  float64
 	FilterAlpha float64 // Root-raised cosine filter alpha
-	CarrierFreq float64 // Carrier frequency offset
+	FrequencyOffset float64 // Baseband - Carrier frequency offset
+	CarrierFrequency float64 //Carrier Frequency Target Zero-IF
+	SampleRate float64  // Calculated Baseband Sampling Rate
 	ModIndex    float64 // Modulation index for FM
 	QAMOrder    int     // QAM constellation order (4, 16, 64, etc.)
 	PSKOrder    int     // PSK constellation order (2, 4, 8, etc.)
@@ -33,15 +35,39 @@ type SDR struct {
 	rx  *iio.Device
 	tx  *iio.Device
 	buf *iio.Buffer
+	config SDRConfig
+	name string
 }
 
-func CreateNetworkSDR(host string) (*SDR, error) {
+
+func NewNetworkSDR(host string. deviceName string) (*SDR, error) {
 	ctx, err := iio.CreateNetworkContext(host)
 	if err != nil {
 		return nil, err
 	}
-	return &SDR{ctx: ctx}, nil
+	return &SDR{ctx: ctx, name: deviceName}, nil
 }
+
+func (s *SDR)ConfigureSDR(symbolRate float64, nyquistRate float64, alphaFreq float64, carrierFreq float64, modIndex float64, qamOrder uint, pskOrder uint ){
+	if nyquistRate < 2.0{
+		nyquistRate = 2.0
+	}
+
+	if modIndex <= 0 || modIndex >= 1.0{
+		modIndex = 0.5	
+	}
+
+	if carrierFrequency <= 0 {
+		carrierFrequency = 1000
+	}
+
+	if alphaFreq <= 0 || alphaFreq >= 1.0{
+		alphaFreq = 0.5
+	}
+	config := SDRConfig{SymbolRate:symbolRate, FilterAlpha:alphaFreq, CarrierFrequency:carrierFreq, SampleRate: nyquistRate*(symbolRate + FrequencyOffset), ModIndex: modIndex; QAMOrder:qamOrder; PSKOrder:pskOrder }
+	s.config = config
+}
+
 
 // GenerateRRCFilter generates Root-Raised Cosine filter taps
 func GenerateRRCFilter(numTaps int, alpha float64, symbolsPerTap float64) []float64 {
