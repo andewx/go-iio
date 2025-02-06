@@ -9,19 +9,18 @@ import (
 )
 
 // AD9361Config represents the configuration for AD9361 transceiver
-type AD9361Config struct {
+type AD9361 struct {
+
+	// Base Configuration
+	Context *SDR
+
 	// RF Configuration
 	RXFrequency uint64  // Hz
 	TXFrequency uint64  // Hz
-	SampleRate  uint32  // Hz
 	RFBandwidth uint32  // Hz
 	GainControl string  // "manual", "slow_attack", "fast_attack"
 	RXGain      float64 // dB
 	TXGain      float64 // dB
-
-	// Buffer Configuration
-	BufferSize uint32
-	IsCyclic   bool
 
 	// Advanced Configuration
 	EnableDDS          bool    // Enable Direct Digital Synthesis
@@ -33,14 +32,6 @@ type AD9361Config struct {
 	DCOffsetTracking   bool    // Enable DC offset tracking
 }
 
-// AD9361Device represents an AD9361 transceiver device
-type AD9361Device struct {
-	stream *iio.Stream
-	phy    *iio.Device // PHY device
-	rx     *iio.Device // RX device
-	tx     *iio.Device // TX device
-	config AD9361Config
-}
 
 // NewAD9361 creates and configures an AD9361 device
 func NewAD9361(hostname string, config AD9361Config) (*AD9361Device, error) {
