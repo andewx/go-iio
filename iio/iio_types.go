@@ -132,34 +132,12 @@ const (
 	IIO_EV_DIR_DOUBLETAP
 )
 
-type Channel struct {
-	handle *C.struct_iio_channel
-}
-
-type Device struct {
-	handle *C.struct_iio_device
-}
-
 type Attr struct {
 	handle *C.struct_iio_attr
 }
 
-type Context struct {
-	handle *C.struct_iio_context
-}
-
 type ContextParamsHandle struct {
 	handle *C.struct_iio_context_params
-}
-
-type ContextParams struct {
-	Out             *C.FILE
-	Err             *C.FILE
-	LogLevel        C.int
-	ErrLevel        C.int
-	TimestampeLevel C.int
-	TimeoutMs       C.uint
-	reserved        [32]C.char
 }
 
 type ChannelsMask struct {
@@ -172,8 +150,4 @@ type EventStream struct {
 
 type Scan struct {
 	handle *C.struct_iio_scan
-}
-
-type Stream struct {
-	handle *C.struct_iio_stream
 }

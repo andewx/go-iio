@@ -57,14 +57,17 @@ func (ch *Channel) GetAttr(name string) (string, error) {
 	cName := C.CString(name)
 	defer C.free(unsafe.Pointer(cName))
 	var value *C.char
-	ret := C.iio_channel_attr_read(ch.handle, cName, &value)
+	value = (*C.char)(C.malloc(C.size_t(256)))
+	defer C.free(unsafe.Pointer(value))
+	ret := C.iio_channel_attr_read(ch.handle, cName, value, 256)
 	if ret < 0 {
 		return "", getError(ret)
 	}
 	return C.GoString(value), nil
 }
 
-// SetAttr sets the value of the specified attribute
+// SetAttr sets the value of the specified attribute read the iio.h specification
+// For the multi-attribute write method using 32 bit signed integer headers for block data
 func (ch *Channel) SetAttr(name, value string) error {
 	cName := C.CString(name)
 	defer C.free(unsafe.Pointer(cName))

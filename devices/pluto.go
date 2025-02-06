@@ -2,6 +2,8 @@ package devices
 
 import (
 	"fmt"
+	"math"
+	"math/cmplx"
 
 	"github.com/andewx/go-iio/iio"
 )
@@ -43,7 +45,7 @@ type AD9361Device struct {
 // NewAD9361 creates and configures an AD9361 device
 func NewAD9361(hostname string, config AD9361Config) (*AD9361Device, error) {
 	// Create network context
-	ctx, err := CreateNetworkContext(hostname)
+	ctx, err := iio.CreateNetworkContext(hostname)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create context: %w", err)
 	}
@@ -196,4 +198,106 @@ func (dev *AD9361Device) Close() error {
 		dev.stream.Close()
 	}
 	return nil
+}
+
+// Modulate applies the specified modulation to the input samples
+func (dev *AD9361Device) Modulate(samples []complex64, config SDRConfig) ([]complex64, error) {
+
+	switch config.Modulation {
+	case ModulationAM:
+		return dev.modulateAM(samples, config)
+	case ModulationFM:
+		return dev.modulateFM(samples, config)
+	case ModulationPSK:
+		return dev.modulatePSK(samples, config)
+	case ModulationQAM:
+		return dev.modulateQAM(samples, config)
+	default:
+		return nil, fmt.Errorf("unsupported modulation type")
+	}
+}
+
+func (dev *AD9361Device) modulateAM(samples []complex64, config SDRConfig) ([]complex64, error) {
+	output := make([]complex64, len(samples))
+	carrier := complex(math.Cos(config.CarrierFreq), math.Sin(config.CarrierFreq))
+
+	for i, sample := range samples {
+		// AM modulation: (1 + m*signal)*carrier
+		magnitude := float32(1.0 + real(sample))
+		output[i] = complex(magnitude*float32(real(carrier)), magnitude*float32(imag(carrier)))
+	}
+
+	return output, nil
+}
+
+func (dev *AD9361Device) modulateFM(samples []complex64, config SDRConfig) ([]complex64, error) {
+	output := make([]complex64, len(samples))
+	phase := 0.0
+
+	for i, sample := range samples {
+		// FM modulation: exp(j*(wc*t + m*integral(signal)))
+		phase += config.ModIndex * float64(real(complex128(sample)))
+		output[i] = complex64(cmplx.Rect(1.0, phase))
+	}
+
+	return output, nil
+}
+
+func (dev *AD9361Device) modulatePSK(samples []complex64, config SDRConfig) ([]complex64, error) {
+	output := make([]complex64, len(samples))
+	symbolAngle := 2 * math.Pi / float64(config.PSKOrder)
+
+	for i, sample := range samples {
+		// PSK modulation: map symbols to constellation points
+		symbol := int(real(sample)) % config.PSKOrder
+		angle := float64(symbol) * symbolAngle
+		output[i] = complex64(cmplx.Rect(1.0, angle))
+	}
+
+	return output, nil
+}
+
+func (dev *AD9361Device) modulateQAM(samples []complex64, config SDRConfig) ([]complex64, error) {
+	output := make([]complex64, len(samples))
+	sqrtM := int(math.Sqrt(float64(config.QAMOrder)))
+	scale := 2.0 * float64(sqrtM-1)
+
+	for i, sample := range samples {
+		// QAM modulation: map symbols to square constellation
+		symbol := int(real(sample)) % config.QAMOrder
+		I := float64(symbol%sqrtM)*2.0 - float64(sqrtM-1)
+		Q := float64(symbol/sqrtM)*2.0 - float64(sqrtM-1)
+		output[i] = complex64(complex(I/scale, Q/scale))
+	}
+
+	return output, nil
+}
+
+// ConfigureDDS sets up the Direct Digital Synthesis
+func (dev *AD9361Device) ConfigureDDS() error {
+	if err := dev.tx.SetAttr("out_altvoltage0_TX1_I_F1_frequency",
+		fmt.Sprintf("%d", dev.config.DDSFrequency)); err != nil {
+		return err
+	}
+
+	scale := fmt.Sprintf("%.6f", dev.config.DDSScale)
+	if err := dev.tx.SetAttr("out_altvoltage0_TX1_I_F1_scale", scale); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// SetFIRFilter configures custom FIR filter taps
+func (dev *AD9361Device) SetFIRFilter(taps []int16) error {
+	// Convert taps to string
+	tapStr := ""
+	for i, tap := range taps {
+		if i > 0 {
+			tapStr += ","
+		}
+		tapStr += fmt.Sprintf("%d", tap)
+	}
+
+	return dev.phy.SetAttr("in_voltage_filter_fir_en", tapStr)
 }

@@ -5,6 +5,7 @@ package iio
 // #include <stdlib.h>
 import "C"
 import (
+	"fmt"
 	"unsafe"
 )
 
@@ -46,9 +47,11 @@ func (dev *Device) GetAttr(name string) (string, error) {
 	cName := C.CString(name)
 	defer C.free(unsafe.Pointer(cName))
 	var value *C.char
-	ret := C.iio_device_attr_read(dev.handle, cName, &value)
+	value = (*C.char)(C.malloc(C.size_t(512)))
+	defer C.free(unsafe.Pointer(value))
+	ret := C.iio_device_attr_read(dev.handle, cName, value, 512)
 	if ret < 0 {
-		return "", getError(ret)
+		return "", fmt.Errorf("iio: attribute %s not found", name)
 	}
 	return C.GoString(value), nil
 }
@@ -61,7 +64,7 @@ func (dev *Device) SetAttr(name, value string) error {
 	defer C.free(unsafe.Pointer(cValue))
 	ret := C.iio_device_attr_write(dev.handle, cName, cValue)
 	if ret < 0 {
-		return getError(ret)
+		return fmt.Errorf("iio: attribute %s not found", name)
 	}
 	return nil
 }
@@ -71,7 +74,9 @@ func (dev *Device) GetDebugAttr(name string) (string, error) {
 	cName := C.CString(name)
 	defer C.free(unsafe.Pointer(cName))
 	var value *C.char
-	ret := C.iio_device_debug_attr_read(dev.handle, cName, &value)
+	value = (*C.char)(C.malloc(C.size_t(1024)))
+	defer C.free(unsafe.Pointer(value))
+	ret := C.iio_device_debug_attr_read(dev.handle, cName, value, 1024)
 	if ret < 0 {
 		return "", getError(ret)
 	}
@@ -86,7 +91,7 @@ func (dev *Device) SetDebugAttr(name, value string) error {
 	defer C.free(unsafe.Pointer(cValue))
 	ret := C.iio_device_debug_attr_write(dev.handle, cName, cValue)
 	if ret < 0 {
-		return getError(ret)
+		return fmt.Errorf("iio: attribute %s not found", name)
 	}
 	return nil
 }

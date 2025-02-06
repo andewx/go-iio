@@ -107,7 +107,7 @@ func setupDevice(ctx *Context, deviceName string, config DeviceConfig) (*Stream,
 	}
 
 	// Create buffer
-	buf, err := dev.CreateBuffer(config.BufferSize, config.IsCyclic)
+	buf, err := dev.CreateBuffer(int(config.BufferSize))
 	if err != nil {
 		ctx.Close()
 		return nil, fmt.Errorf("failed to create buffer: %w", err)
@@ -131,7 +131,7 @@ func (s *Stream) Read(samples interface{}) (int, error) {
 	}
 
 	// Refill the buffer
-	n, err := s.buffer.Refill()
+	_, err := s.buffer.Refill()
 	if err != nil {
 		return 0, fmt.Errorf("failed to refill buffer: %w", err)
 	}
@@ -195,7 +195,7 @@ func (s *Stream) Write(samples interface{}) (int, error) {
 	reflect.Copy(dst, val)
 
 	// Push the buffer
-	n, err := s.buffer.Push()
+	_, err := s.buffer.Push()
 	if err != nil {
 		return 0, fmt.Errorf("failed to push buffer: %w", err)
 	}
@@ -206,7 +206,7 @@ func (s *Stream) Write(samples interface{}) (int, error) {
 // Close releases all resources associated with the stream
 func (s *Stream) Close() error {
 	if s.buffer != nil {
-		s.buffer.Destroy()
+		s.buffer.Close()
 		s.buffer = nil
 	}
 	return nil

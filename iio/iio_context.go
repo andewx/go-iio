@@ -5,6 +5,7 @@ package iio
 // #include <stdlib.h>
 import "C"
 import (
+	"fmt"
 	"unsafe"
 )
 
@@ -56,10 +57,12 @@ func CreateURIContext(uri string) (*Context, error) {
 }
 
 // GetVersion returns the backend version information
-func (ctx *Context) GetVersion() (major, minor, git_tag string) {
-	var cMajor, cMinor, cGitTag *C.char
-	C.iio_context_get_version(ctx.handle, &cMajor, &cMinor, &cGitTag)
-	return C.GoString(cMajor), C.GoString(cMinor), C.GoString(cGitTag)
+func (ctx *Context) GetVersion() (major int, minor int, git_tag string) {
+	var cMajor, cMinor *C.uint
+	var cGitTag [9]C.char
+	cGitTag[8] = '\000'
+	C.iio_context_get_version(ctx.handle, cMajor, cMinor, &cGitTag[0])
+	return int(*cMajor), int(*cMinor), C.GoString(&cGitTag[0])
 }
 
 // GetName returns the name of the backend
@@ -72,14 +75,27 @@ func (ctx *Context) GetDescription() string {
 	return C.GoString(C.iio_context_get_description(ctx.handle))
 }
 
+func (ctx *Context) GetAttrsCount() int {
+	return int(C.iio_context_get_attrs_count(ctx.handle))
+}
+
+func (ctx *Context) GetAttr(index int) (string, string, error) {
+	var name, value *C.char
+	ret := C.iio_context_get_attr(ctx.handle, C.uint(index), &name, &value)
+	if ret < 0 {
+		return "", "", fmt.Errorf("iio: attribute %d not found", index)
+	}
+	return C.GoString(name), C.GoString(value), nil
+}
+
 // GetXMLAttr returns the value of an XML attribute
 func (ctx *Context) GetXMLAttr(name string) (string, error) {
 	cName := C.CString(name)
 	defer C.free(unsafe.Pointer(cName))
 	var value *C.char
-	ret := C.iio_context_get_attr_value(ctx.handle, cName, &value)
-	if ret < 0 {
-		return "", getError(ret)
+	ret := C.iio_context_get_attr_value(ctx.handle, cName)
+	if ret == nil {
+		fmt.Printf("iio: attribute %s not found", name)
 	}
 	return C.GoString(value), nil
 }
