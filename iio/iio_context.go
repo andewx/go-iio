@@ -105,13 +105,26 @@ func (ctx *Context) GetDevicesCount() uint {
 	return uint(C.iio_context_get_devices_count(ctx.handle))
 }
 
+func (ctx *Context) GetDevices() ([]*Device, error) {
+	count := ctx.GetDevicesCount()
+	devices := make([]*Device, count)
+	for i := uint(0); i < count; i++ {
+		device, err := ctx.GetDevice(i)
+		if err != nil {
+			return nil, err
+		}
+		devices[i] = device
+	}
+	return devices, nil
+}
+
 // GetDevice returns the device at the specified index
 func (ctx *Context) GetDevice(index uint) (*Device, error) {
 	handle := C.iio_context_get_device(ctx.handle, C.uint(index))
 	if handle == nil {
 		return nil, getLastError()
 	}
-	return &Device{handle: handle}, nil
+	return NewDevice(handle), nil
 }
 
 // FindDevice finds a device by its name or ID

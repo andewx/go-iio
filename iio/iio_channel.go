@@ -8,9 +8,31 @@ import (
 	"unsafe"
 )
 
+type ChannelStatus int
+
+const (
+	ChannelStatusUnknown ChannelStatus = iota
+	ChannelStatusOK
+	ChannelStatusError
+)
+
 // Channel represents an IIO channel
 type Channel struct {
-	handle *C.struct_iio_channel
+	handle     *C.struct_iio_channel
+	attributes []string
+	status     ChannelStatus
+}
+
+func NewChannel(handle *C.struct_iio_channel) *Channel {
+	return &Channel{handle: handle, status: ChannelStatusUnknown, attributes: make([]string, 0)}
+}
+
+func (ch *Channel) Init() error {
+	ch.attributes = make([]string, ch.GetAttributesCount())
+	for i := uint(0); i < ch.GetAttributesCount(); i++ {
+		ch.attributes[i] = ch.GetAttr(i)
+	}
+	return nil
 }
 
 // GetID returns the ID of the channel

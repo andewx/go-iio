@@ -9,9 +9,46 @@ import (
 	"unsafe"
 )
 
+type DeviceStatus int
+
+const (
+	DeviceStatusUnknown DeviceStatus = iota
+	DeviceStatusOK
+	DeviceStatusError
+	DeviceStatusConnected
+	DeviceStatusDisconnected
+)
+
 // Device represents an IIO device
 type Device struct {
-	handle *C.struct_iio_device
+	handle     *C.struct_iio_device
+	channels   []*Channel
+	attributes []string
+	status     DeviceStatus
+}
+
+func NewDevice(handle *C.struct_iio_device) *Device {
+	return &Device{handle: handle, status: DeviceStatusUnknown, channels: make([]*Channel, 0), attributes: make([]string, 0)}
+}
+
+func (dev *Device) Init() error {
+
+	// Initialize channels
+	dev.channels = make([]*Channel, dev.GetChannelsCount())
+	for i := uint(0); i < dev.GetChannelsCount(); i++ {
+		channel, err := dev.GetChannel(i)
+		if err != nil {
+			return err
+		}
+		dev.channels[i] = channel
+	}
+
+	// Initialize attributes
+	dev.attributes = make([]string, dev.GetAttributesCount())
+	for i := uint(0); i < dev.GetAttributesCount(); i++ {
+		dev.attributes[i] = dev.GetAttr(i)
+	}
+	return nil
 }
 
 // GetName returns the name of the device
@@ -28,6 +65,11 @@ func (dev *Device) GetID() string {
 	return C.GoString(C.iio_device_get_id(dev.handle))
 }
 
+// GetAttributes returns the attributes of the device
+func (dev *Device) GetAttributes() []string {
+	return dev.attributes
+}
+
 // GetChannelsCount returns the number of channels the device has
 func (dev *Device) GetChannelsCount() uint {
 	return uint(C.iio_device_get_channels_count(dev.handle))
@@ -39,7 +81,7 @@ func (dev *Device) GetChannel(index uint) (*Channel, error) {
 	if handle == nil {
 		return nil, getLastError()
 	}
-	return &Channel{handle: handle}, nil
+	return NewChannel(handle), nil
 }
 
 // GetAttr returns the value of the specified attribute

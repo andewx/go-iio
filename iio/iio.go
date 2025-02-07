@@ -1,5 +1,10 @@
 package iio
 
+// #cgo pkg-config: libiio
+// #include <iio.h>
+// #include <stdlib.h>
+import "C"
+
 import (
 	"fmt"
 	"reflect"
@@ -34,13 +39,14 @@ func NewLocalDevice(deviceName string, config DeviceConfig) (*Stream, error) {
 }
 
 // NewNetworkDevice creates and configures a remote IIO device
-func NewNetworkDevice(hostname, deviceName string, config DeviceConfig) (*Stream, error) {
+func NewNetworkDevice(hostname, deviceName string, config DeviceConfig) (*Context, *Stream, error) {
 	ctx, err := CreateNetworkContext(hostname)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create network context: %w", err)
+		return nil, nil, fmt.Errorf("failed to create network context: %w", err)
 	}
+	stream, err := setupDevice(ctx, deviceName, config)
 
-	return setupDevice(ctx, deviceName, config)
+	return ctx, stream, err
 }
 
 // NewXMLDevice creates and configures an IIO device from XML description

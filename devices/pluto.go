@@ -8,6 +8,12 @@ import (
 	"github.com/andewx/go-iio/iio"
 )
 
+type SDRDevice interface {
+	Connect(host string, name string, config SDRConfig, enableChannels []bool) error
+	Close() error
+	Modulate(samples []complex64, config SDRConfig) ([]complex64, error)
+}
+
 // AD9361Config represents the configuration for AD9361 transceiver
 type AD9361 struct {
 
@@ -31,7 +37,6 @@ type AD9361 struct {
 	QuadratureTracking bool    // Enable quadrature tracking
 	DCOffsetTracking   bool    // Enable DC offset tracking
 }
-
 
 // NewAD9361 creates and configures an AD9361 device
 func NewAD9361(hostname string, config AD9361Config) (*AD9361Device, error) {

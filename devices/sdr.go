@@ -25,7 +25,7 @@ type SDRConfig struct {
 	Modulation  ModulationType
 	SymbolRate  float64
 	FilterAlpha float64 // Root-raised cosine filter alpha
-	FrequencyOffset float64 // Baseband - Carrier frequency offset
+	BasebandFrequency float64 // Baseband
 	CarrierFrequency float64 //Carrier Frequency Target Zero-IF
 	SampleRate float64  // Calculated Baseband Sampling Rate
 	ModIndex    float64 // Modulation index for FM
@@ -35,15 +35,26 @@ type SDRConfig struct {
 	FFTSize        int    //FFT Size
 }
 
+/*
+SDR struct
+ctx: iio context
+stream: iio stream
+config: SDRConfig
+name: device name
+
+Represents a software defined radio device and especially its context and high level configuration.
+*/
 type SDR struct {
 	ctx *iio.Context
 	stream *iio.Stream
 	config SDRConfig
+	deviceList []*iio.Device
 	name string
+	Platform SDRDevice
 }
 
 
-func (s *SDR) Connect(host string. name string, config SDRConfig, enableChannels []bool) (error) {
+func (s *SDR) Connect(host string, name string, config SDRConfig, enableChannels []bool) (error) {
 	bytesPerSample := int(config.SampleBitDepth / 4)
 	if (config.SampleBitDepth %4 > 0){
 		bytesPerSample = bytesPerSample + 1
@@ -56,6 +67,22 @@ func (s *SDR) Connect(host string. name string, config SDRConfig, enableChannels
 	}
 	s.ctx = ctx
 	s.stream = strm
+	return nil
+}
+
+// ConnectDevices connects to all devices in the context and initializes them
+func (s *SDR) ConnectDevices()(error){
+	devices, err := s.ctx.GetDevices()
+	if err != nil {
+		return err
+	}
+	for _, device := range devices {
+		err := device.Init()
+		if err != nil {
+			return err
+		}
+	}
+	s.deviceList = devices
 	return nil
 }
 
@@ -76,7 +103,7 @@ func NewSDR(symbolRate float64, sampleBitDepth int, fft_size int, nyquistRate fl
 		alphaFreq = 0.5
 	}
 
-	config := SDRConfig{SymbolRate:symbolRate, SampleBitDepth:sampleBitDepth, FFTSize: fft_size, FilterAlpha:alphaFreq, CarrierFrequency:carrierFreq, SampleRate: nyquistRate*(symbolRate + FrequencyOffset), ModIndex: modIndex; QAMOrder:qamOrder; PSKOrder:pskOrder }
+	config := SDRConfig{SymbolRate:symbolRate, SampleBitDepth:sampleBitDepth, FFTSize: fft_size, FilterAlpha:alphaFreq, CarrierFrequency:carrierFreq, SampleRate: nyquistRate*(symbolRate + BasebandFrequency), ModIndex: modIndex; QAMOrder:qamOrder; PSKOrder:pskOrder }
 	return &SDR{config:config}, nil
 }
 
