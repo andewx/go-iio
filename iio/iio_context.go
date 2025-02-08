@@ -12,48 +12,88 @@ import (
 // Context represents an IIO context
 type Context struct {
 	handle *C.struct_iio_context
+	attrs  []*ContextAttribute
 }
 
 // CreateContext creates the default IIO context
 func CreateContext() (*Context, error) {
+	var err error
 	handle := C.iio_create_default_context()
 	if handle == nil {
 		return nil, getLastError()
 	}
-	return &Context{handle: handle}, nil
+	ctx := &Context{handle: handle, attrs: nil}
+
+	ctx.attrs = GetContextAttributes(handle)
+
+	if ctx.attrs == nil {
+		err = fmt.Errorf("Default Context attributes not available\n")
+	}
+
+	return ctx, err
 }
 
 // CreateNetworkContext creates a network context from the specified hostname
 func CreateNetworkContext(hostname string) (*Context, error) {
+	var err error
 	cHostname := C.CString(hostname)
 	defer C.free(unsafe.Pointer(cHostname))
 	handle := C.iio_create_network_context(cHostname)
 	if handle == nil {
 		return nil, getLastError()
 	}
-	return &Context{handle: handle}, nil
+
+	ctx := &Context{handle: handle, attrs: nil}
+
+	ctx.attrs = GetContextAttributes(handle)
+
+	if ctx.attrs == nil {
+		err = fmt.Errorf("Network Context attributes not available\n")
+	}
+
+	return ctx, err
 }
 
 // CreateXMLContext creates a context from an XML file
 func CreateXMLContext(xmlFile string) (*Context, error) {
+	var err error
 	cXmlFile := C.CString(xmlFile)
 	defer C.free(unsafe.Pointer(cXmlFile))
 	handle := C.iio_create_xml_context(cXmlFile)
 	if handle == nil {
 		return nil, getLastError()
 	}
-	return &Context{handle: handle}, nil
+
+	ctx := &Context{handle: handle, attrs: nil}
+
+	ctx.attrs = GetContextAttributes(handle)
+
+	if ctx.attrs == nil {
+		err = fmt.Errorf("Default Context attributes not available\n")
+	}
+
+	return ctx, err
 }
 
 // CreateURIContext creates a context from an URI description
 func CreateURIContext(uri string) (*Context, error) {
+	var err error
 	cUri := C.CString(uri)
 	defer C.free(unsafe.Pointer(cUri))
 	handle := C.iio_create_context_from_uri(cUri)
 	if handle == nil {
 		return nil, getLastError()
 	}
-	return &Context{handle: handle}, nil
+
+	ctx := &Context{handle: handle, attrs: nil}
+
+	ctx.attrs = GetContextAttributes(handle)
+
+	if ctx.attrs == nil {
+		err = fmt.Errorf("Default Context attributes not available\n")
+	}
+
+	return ctx, err
 }
 
 // GetVersion returns the backend version information

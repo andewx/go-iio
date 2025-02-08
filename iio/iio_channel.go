@@ -5,6 +5,7 @@ package iio
 // #include <stdlib.h>
 import "C"
 import (
+	"fmt"
 	"unsafe"
 )
 
@@ -19,18 +20,21 @@ const (
 // Channel represents an IIO channel
 type Channel struct {
 	handle     *C.struct_iio_channel
-	attributes []string
+	attributes []*ChannelAttribute
 	status     ChannelStatus
 }
 
 func NewChannel(handle *C.struct_iio_channel) *Channel {
-	return &Channel{handle: handle, status: ChannelStatusUnknown, attributes: make([]string, 0)}
+	return &Channel{handle: handle, status: ChannelStatusUnknown, attributes: nil}
 }
 
+// Init() - After a handle for a channel is recieved we initiate the channel which merely reads in its attributes
 func (ch *Channel) Init() error {
-	ch.attributes = make([]string, ch.GetAttributesCount())
-	for i := uint(0); i < ch.GetAttributesCount(); i++ {
-		ch.attributes[i] = ch.GetAttr(i)
+	var err error
+	ch.attributes = GetChannelAttributes(ch.handle)
+	if ch.attributes == nil {
+		err = fmt.Errorf("Unable to establish IIO Connection to Channel and read attributes")
+		return err
 	}
 	return nil
 }

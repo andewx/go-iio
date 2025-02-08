@@ -25,14 +25,16 @@ type Device struct {
 	channels   []*Channel
 	attributes []string
 	status     DeviceStatus
+	stream     *Stream
 }
 
 func NewDevice(handle *C.struct_iio_device) *Device {
 	return &Device{handle: handle, status: DeviceStatusUnknown, channels: make([]*Channel, 0), attributes: make([]string, 0)}
 }
 
+// Init - initialzes the device including reading in all channels and attributes.
 func (dev *Device) Init() error {
-
+	var err_ error
 	// Initialize channels
 	dev.channels = make([]*Channel, dev.GetChannelsCount())
 	for i := uint(0); i < dev.GetChannelsCount(); i++ {
@@ -40,13 +42,17 @@ func (dev *Device) Init() error {
 		if err != nil {
 			return err
 		}
+		channel.Init()
 		dev.channels[i] = channel
 	}
 
 	// Initialize attributes
 	dev.attributes = make([]string, dev.GetAttributesCount())
-	for i := uint(0); i < dev.GetAttributesCount(); i++ {
-		dev.attributes[i] = dev.GetAttr(i)
+	for i := 0; i < dev.GetAttributesCount(); i++ {
+		dev.attributes[i], err_ = dev.GetAttr(i)
+		if err_ != nil {
+			return err_
+		}
 	}
 	return nil
 }
@@ -85,30 +91,15 @@ func (dev *Device) GetChannel(index uint) (*Channel, error) {
 }
 
 // GetAttr returns the value of the specified attribute
-func (dev *Device) GetAttr(name string) (string, error) {
-	cName := C.CString(name)
-	defer C.free(unsafe.Pointer(cName))
-	var value *C.char
-	value = (*C.char)(C.malloc(C.size_t(512)))
-	defer C.free(unsafe.Pointer(value))
-	ret := C.iio_device_attr_read(dev.handle, cName, value, 512)
-	if ret < 0 {
-		return "", fmt.Errorf("iio: attribute %s not found", name)
-	}
-	return C.GoString(value), nil
-}
+func (dev *Device) GetAttr(index int) (string, error) {
+	if dev.attributes != nil {
+		if index > len(dev.attributes) {
+			return "", fmt.Errorf("Error attribute index %d does not exist", index)
+		}
+		return dev.attributes[index], nil
 
-// SetAttr sets the value of the specified attribute
-func (dev *Device) SetAttr(name, value string) error {
-	cName := C.CString(name)
-	defer C.free(unsafe.Pointer(cName))
-	cValue := C.CString(value)
-	defer C.free(unsafe.Pointer(cValue))
-	ret := C.iio_device_attr_write(dev.handle, cName, cValue)
-	if ret < 0 {
-		return fmt.Errorf("iio: attribute %s not found", name)
 	}
-	return nil
+	return "", fmt.Errorf("Device attribuets not initialized")
 }
 
 // GetDebugAttr returns the value of the specified debug attribute
@@ -136,4 +127,8 @@ func (dev *Device) SetDebugAttr(name, value string) error {
 		return fmt.Errorf("iio: attribute %s not found", name)
 	}
 	return nil
+}
+
+func (dev *Device) GetAttributesCount() int {
+	return GetDeviceAttributesCount(dev.handle)
 }

@@ -28,87 +28,61 @@ type Stream struct {
 	config  DeviceConfig
 }
 
+// func Verision - Returns version of the LibIIO library this was compiled against.
+func Version() string {
+	return "v-0.26"
+}
+
 // NewLocalDevice creates and configures a local IIO device
-func NewLocalDevice(deviceName string, config DeviceConfig) (*Stream, error) {
+func NewLocalDevice(deviceName string, config DeviceConfig) (*Context, *Device, error) {
 	ctx, err := CreateContext()
 	if err != nil {
-		return nil, fmt.Errorf("failed to create local context: %w", err)
+		return nil, nil, fmt.Errorf("failed to create local context: %w", err)
 	}
 
-	return setupDevice(ctx, deviceName, config)
+	dev, err := setupDevice(ctx, deviceName, config)
+	return ctx, dev, err
 }
 
 // NewNetworkDevice creates and configures a remote IIO device
-func NewNetworkDevice(hostname, deviceName string, config DeviceConfig) (*Context, *Stream, error) {
+func NewNetworkDevice(hostname, deviceName string, config DeviceConfig) (*Context, *Device, error) {
 	ctx, err := CreateNetworkContext(hostname)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to create network context: %w", err)
 	}
-	stream, err := setupDevice(ctx, deviceName, config)
-
-	return ctx, stream, err
+	dev, err := setupDevice(ctx, deviceName, config)
+	return ctx, dev, err
 }
 
 // NewXMLDevice creates and configures an IIO device from XML description
-func NewXMLDevice(xmlPath, deviceName string, config DeviceConfig) (*Stream, error) {
+func NewXMLDevice(xmlPath, deviceName string, config DeviceConfig) (*Context, *Device, error) {
 	ctx, err := CreateXMLContext(xmlPath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create XML context: %w", err)
+		return nil, nil, fmt.Errorf("failed to create XML context: %w", err)
 	}
-
-	return setupDevice(ctx, deviceName, config)
+	dev, err := setupDevice(ctx, deviceName, config)
+	return ctx, dev, err
 }
 
 // setupDevice configures an IIO device according to the provided config
-func setupDevice(ctx *Context, deviceName string, config DeviceConfig) (*Stream, error) {
+func setupDevice(ctx *Context, deviceName string, config DeviceConfig) (*Device, error) {
 	dev, err := ctx.FindDevice(deviceName)
 	if err != nil {
 		ctx.Close()
-		return nil, fmt.Errorf("device not found: %w", err)
+		return nil, fmt.Errorf("%s device not found: %w", deviceName, err)
+	}
+
+	err = dev.Init()
+	if err != nil {
+		return nil, fmt.Errorf("%s device couldn't be initiated. Returned with error %w", deviceName, err)
 	}
 
 	// Configure channels
-	channelCount := dev.GetChannelsCount()
-	if len(config.Channels) != int(channelCount) {
-		ctx.Close()
-		return nil, fmt.Errorf("channel configuration mismatch: got %d, want %d",
-			len(config.Channels), channelCount)
-	}
-
-	for i := uint(0); i < channelCount; i++ {
-		ch, err := dev.GetChannel(i)
+	for i := 0; i < len(dev.channels); i++ {
+		c := dev.channels[i]
+		c.Init()
 		if err != nil {
-			ctx.Close()
-			return nil, fmt.Errorf("failed to get channel %d: %w", i, err)
-		}
-
-		if config.Channels[i] {
-			ch.Enable()
-		} else {
-			ch.Disable()
-		}
-	}
-
-	// Set sample rate if specified
-	if config.SampleRate > 0 {
-		err = dev.SetAttr("sampling_frequency", fmt.Sprintf("%d", config.SampleRate))
-		if err != nil {
-			ctx.Close()
-			return nil, fmt.Errorf("failed to set sample rate: %w", err)
-		}
-	}
-
-	// Configure trigger if specified
-	if config.TriggerName != "" {
-		trigger, err := ctx.FindDevice(config.TriggerName)
-		if err != nil {
-			ctx.Close()
-			return nil, fmt.Errorf("trigger device not found: %w", err)
-		}
-		err = dev.SetAttr("trigger", trigger.GetID())
-		if err != nil {
-			ctx.Close()
-			return nil, fmt.Errorf("failed to set trigger: %w", err)
+			return nil, fmt.Errorf("%s device channel not initiated %w", err)
 		}
 	}
 
@@ -119,12 +93,15 @@ func setupDevice(ctx *Context, deviceName string, config DeviceConfig) (*Stream,
 		return nil, fmt.Errorf("failed to create buffer: %w", err)
 	}
 
-	return &Stream{
+	strm := &Stream{
 		device:  dev,
 		buffer:  buf,
 		config:  config,
 		samples: make([]byte, buf.GetSize()),
-	}, nil
+	}
+
+	dev.stream = strm
+	return dev, nil
 }
 
 // Read reads samples from the device into the provided slice
