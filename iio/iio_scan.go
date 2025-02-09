@@ -1,99 +1,48 @@
 package iio
 
-/*
-#include <iio.h>
-#include <errno.h>
-#include <stdlib.h>
-*/
+// #cgo pkg-config: libiio
+
+// #include <iio.h>
+// #include <errno.h>
+// #include <stdlib.h>
 import "C"
 import (
 	"errors"
+	"fmt"
 	"unsafe"
 )
 
-// ScanContext represents a context for scanning available IIO devices
-type ScanContext struct {
-	ctx *C.struct_iio_scan_context
-}
-
 // ContextInfo contains information about a discovered IIO context
 type ContextInfo struct {
-	info *C.struct_iio_context_info
+	handle *C.struct_iio_context_info
 }
 
-// ScanBlock represents a block for scanning IIO contexts
+// ScanBlock Encapsulates the Scan Context operations and allows us to associate a block of context infos
 type ScanBlock struct {
-	blk *C.struct_iio_scan_block
-}
-
-// CreateScanContext creates a new scan context for discovering IIO devices
-// backend is a comma-separated list of backends to use for scanning (e.g. "local,usb,ip")
-// flags should be set to 0 for now as it's unused in the C API
-func CreateScanContext(backend string, flags uint) (*ScanContext, error) {
-	cBackend := C.CString(backend)
-	defer C.free(unsafe.Pointer(cBackend))
-
-	ctx := C.iio_create_scan_context(cBackend, C.uint(flags))
-	if ctx == nil {
-		return nil, errors.New("failed to create scan context")
-	}
-
-	return &ScanContext{ctx: ctx}, nil
-}
-
-// Destroy frees the resources associated with the scan context
-func (s *ScanContext) Destroy() {
-	if s.ctx != nil {
-		C.iio_scan_context_destroy(s.ctx)
-		s.ctx = nil
-	}
-}
-
-// GetInfoList enumerates available contexts and returns a list of context info
-func (s *ScanContext) GetInfoList() ([]*ContextInfo, error) {
-	var infoPtr **C.struct_iio_context_info
-	count := C.iio_scan_context_get_info_list(s.ctx, &infoPtr)
-
-	if count < 0 {
-		return nil, errors.New("failed to get context info list")
-	}
-
-	// Create slice to hold the results
-	result := make([]*ContextInfo, count)
-
-	// Convert C array to Go slice
-	slice := unsafe.Slice(infoPtr, count)
-	for i := 0; i < int(count); i++ {
-		result[i] = &ContextInfo{info: slice[i]}
-	}
-
-	return result, nil
-}
-
-// FreeInfoList frees the memory allocated for the context info list
-func FreeInfoList(infoList []*ContextInfo) {
-	if len(infoList) == 0 {
-		return
-	}
-
-	// Get pointer to first element
-	infoPtr := (**C.struct_iio_context_info)(unsafe.Pointer(&infoList[0].info))
-	C.iio_context_info_list_free(infoPtr)
+	blk   *C.struct_iio_scan_block
+	info  []*ContextInfo
+	count int
 }
 
 // GetDescription returns the description of a discovered context
 func (ci *ContextInfo) GetDescription() string {
-	return C.GoString(C.iio_context_info_get_description(ci.info))
+	return C.GoString(C.iio_context_info_get_description(ci.handle))
 }
 
 // GetURI returns the URI of a discovered context
 func (ci *ContextInfo) GetURI() string {
-	return C.GoString(C.iio_context_info_get_uri(ci.info))
+	return C.GoString(C.iio_context_info_get_uri(ci.handle))
 }
+
+/* ----------------
+Scan Block
+----------------- */
 
 // CreateScanBlock creates a new scan block for discovering IIO contexts
 func CreateScanBlock(backend string, flags uint) (*ScanBlock, error) {
 	var cBackend *C.char
+	var err error
+	var count int
 	if backend != "" {
 		cBackend = C.CString(backend)
 		defer C.free(unsafe.Pointer(cBackend))
@@ -104,7 +53,11 @@ func CreateScanBlock(backend string, flags uint) (*ScanBlock, error) {
 		return nil, errors.New("failed to create scan block")
 	}
 
-	return &ScanBlock{blk: blk}, nil
+	scn := &ScanBlock{blk: blk}
+	count, err = scn.Scan()
+	scn.count = count
+
+	return &ScanBlock{blk: blk}, err
 }
 
 // Destroy frees the resources associated with the scan block
@@ -130,5 +83,44 @@ func (sb *ScanBlock) GetInfo(index uint) (*ContextInfo, error) {
 	if info == nil {
 		return nil, errors.New("failed to get context info")
 	}
-	return &ContextInfo{info: info}, nil
+	return &ContextInfo{handle: info}, nil
+}
+
+// StringInfo returns the given context info description for a context
+func (sb *ScanBlock) StringInfo(index int) (string, error) {
+	var err error
+	var info *ContextInfo
+	var description string
+	var uri string
+
+	info, err = sb.GetInfo(uint(index))
+
+	if err != nil {
+		return fmt.Sprintf("Context Error at scan index %d\n", index), err
+	}
+	uri = info.GetURI()
+	description = info.GetDescription()
+
+	if uri == "" {
+		uri = "error"
+	}
+
+	if description == "" {
+		description = "error"
+	}
+
+	return fmt.Sprintf("Context Found: [%s]\n@ %s\n", uri, description), err
+}
+
+func (sb *ScanBlock) String() string {
+	var strbuild string
+	for i := 0; i < sb.count; i++ {
+		nstring, err := sb.StringInfo(i)
+		if err != nil {
+			return strbuild
+		}
+		strbuild = fmt.Sprintf("%s\n", strbuild+nstring)
+	}
+
+	return strbuild
 }

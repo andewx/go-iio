@@ -1,0 +1,12 @@
+prefix=/Users/briananderson/Tools/git/libiio/build/iio.framework/Versions/0.26
+exec_prefix=${prefix}
+libdir=/Users/briananderson/Tools/git/libiio/build/iio.framework/Versions/0.26
+includedir=/Users/briananderson/Tools/git/libiio/build/iio.framework/Versions/0.26/iio/Headers
+
+Name: libiio
+Description: Library for interfacing IIO devices
+Version: 0.26
+
+Requires:
+Libs: -L${libdir} -liio
+Cflags: -I${includedir}

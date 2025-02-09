@@ -12,13 +12,28 @@ import (
 	"github.com/andewx/go-iio/common"
 )
 
+// DataType represents the type of data values samples can take
+type DataType int
+
+const (
+	DataTypeFloat32 DataType = iota
+	DataTypeFloat64
+	DataTypeInt8
+	DataTypeInt16
+	DataTypeInt32
+	DataTypeInt64
+	DataTypeComplex64
+	DataTypeComplex128
+)
+
 // Buffer wraps an iio_buffer, which allows for reading samples from and writing
 // data to the underlying device.
 type Buffer struct {
-	closed *bool
-	size   int
-	handle *C.struct_iio_buffer
-	data   []byte
+	closed    *bool
+	size      int
+	data_type DataType
+	handle    *C.struct_iio_buffer
+	data      []byte
 }
 
 // Close will destroy the handle to the iio_buffer.
@@ -77,7 +92,6 @@ func (b *Buffer) Write(ptr unsafe.Pointer, size int) {
 }
 
 // PushPartial will push the data written to the Buffer (from start to end) to the
-// Device.
 func (b *Buffer) PushPartial(length int) (int, error) {
 	i := C.iio_buffer_push_partial(b.handle, C.size_t(length))
 	if i < 0 {
@@ -86,8 +100,7 @@ func (b *Buffer) PushPartial(length int) (int, error) {
 	return int(i), nil
 }
 
-// Push will push the data written to the Buffer (from start to end) to the
-// Device.
+// Push will push the data written to the Buffer (from start to end) to the device
 func (b *Buffer) Push() (int, error) {
 	i := C.iio_buffer_push(b.handle)
 	if i < 0 {
@@ -105,14 +118,17 @@ func (b *Buffer) Refill() (int, error) {
 	return int(i), nil
 }
 
+// Get Size gets the size of the buffer
 func (b *Buffer) GetSize() int {
 	return b.size
 }
 
+// Get Data returns the byte[] reference to the buffer
 func (b *Buffer) GetData() []byte {
 	return b.data
 }
 
+// Create Buffer creates a buffer and a buffer handle
 func (d *Device) createBuffer(bytesCount int, cyclic bool) (*Buffer, error) {
 	buf, err := C.iio_device_create_buffer(
 		d.handle,

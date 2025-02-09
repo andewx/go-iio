@@ -57,6 +57,11 @@ func (dev *Device) Init() error {
 	return nil
 }
 
+// Destroy destroys device handle and any channels and attributes
+func (dev *Device) Destroy() {
+	//Destroy any buffers and blocks
+}
+
 // GetName returns the name of the device
 func (dev *Device) GetName() string {
 	name := C.iio_device_get_name(dev.handle)
@@ -81,6 +86,11 @@ func (dev *Device) GetChannelsCount() uint {
 	return uint(C.iio_device_get_channels_count(dev.handle))
 }
 
+// GetChannels returns the device channels
+func (dev *Device) GetChannels() []*Channel {
+	return dev.channels
+}
+
 // GetChannel returns the channel at the specified index
 func (dev *Device) GetChannel(index uint) (*Channel, error) {
 	handle := C.iio_device_get_channel(dev.handle, C.uint(index))
@@ -100,6 +110,21 @@ func (dev *Device) GetAttr(index int) (string, error) {
 
 	}
 	return "", fmt.Errorf("Device attribuets not initialized")
+}
+
+// SetAttr sets the value of a specified attribute for the device.
+func (dev *Device) SetAttr(attrName string, value string) error {
+	cAttrName := C.CString(attrName)
+	defer C.free(unsafe.Pointer(cAttrName))
+
+	cValue := C.CString(value)
+	defer C.free(unsafe.Pointer(cValue))
+
+	// Assuming there's a C function to set device attributes
+	if C.iio_device_attr_write(dev.handle, cAttrName, cValue) < 0 {
+		return fmt.Errorf("failed to set attribute %s to %s", attrName, value)
+	}
+	return nil
 }
 
 // GetDebugAttr returns the value of the specified debug attribute

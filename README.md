@@ -10,7 +10,7 @@ This is a Go library for the libiio library. Note that the libiio library is a C
 
 Recommended installation method is to use the `analogdevicesinc` github repository and build the libiio library from source. Ensure that the `libiio` repository is cloned to the same version as the `go-iio` repository.
 
-This version of the `libiio` repository is known to work with this version of the `go-iio` repository.
+The 0.26 version of the `libiio` repository is known to work with this repository.
 
 Must ensure that you are working with the `v0.26` tag of the `libiio` repository.
 
@@ -32,13 +32,100 @@ Move libiio to the `/usr/local` repositories for global library linkage
 
 ## About
 
-This library tries to be a full featured wrapper around the libiio library. Currently, it is only tested with the AD9361 radio, but it should work with any libiio compatible device.
+This library is an API binding framework for the libiio C ABI library. Currently, it is only tested with the AD9361 radio, but it should work with any libiio compatible device.
 
 This library is still under development and does not yet support all features of the libiio library.
 
 If you find any issues, please file an issue on the [GitHub repository](https://github.com/andewx/go-iio/issues).
 
 This library was developed by Brian M. Anderson for a University of Arizona project.
+
+
+## Usage
+
+### Overview
+
+Here is a usage example for connecting to a networked libiio compatible device and printing the available devices presented, device attributes, channels, and channel attributes.
+
+```
+func main() {
+var g *sdr.SDR
+	var err error
+	var host, name string
+	host = "192.168.2.1"
+	name = "ad9361"
+	var scan *iio.ScanBlock
+
+	fmt.Printf("Welcome...Starting SDR Test Suite\n")
+
+	fmt.Printf("...Finding available contexts and listing\n")
+
+	scan, err = iio.CreateScanBlock("ip:usb", 0)
+
+	if err != nil {
+		fmt.Printf("IIO unable to scan for available contexts")
+		return
+	}
+
+	scan.Scan()
+
+	fmt.Printf("...Scanning for available contexts\n%s", scan.String())
+	fmt.Printf("...Testing device availability for AD9361\n", iio.Version())
+
+	g, err = sdr.ConnectNetwork(host, name)
+
+	if err != nil || g == nil {
+		fmt.Printf("Unable to connect to Network Device %s at %s \n", host, name)
+		return
+	}
+
+	g.Print()
+
+}
+```
+
+### `iio`
+
+The package `iio` contains the bindings for for the libiio library and works similarily to the `C` version of the library except that the C-data structures are mapped to go structs.
+
+## Building and Running
+
+### macOS Version 13.0 (Ventura) or later
+
+There is an issue with the golang complier and the `libiio` library on macOS version 13.0 (Ventura) or later where the @rpath attribute is added to the binary and lost.
+
+For now the fix is to determine the path of the `libiio` library and headers. And change the compiled binary executable in golang with the following:
+
+First inspect the `./pkg-config/macos_install.sh` script to determine the path of the `libiio` library and headers. and then run the following commands:
+
+```
+go build ./...
+cd main
+go generate
+./main
+```
+
+This will change the @rpath attribute to the correct path of the `libiio` library and headers.
+
+You can verify the @rpath attribute is correct by running the following command:
+
+```
+otool -l main | grep @rpath
+```
+
+### Devices
+
+#### AD9361
+
+The AD9361 is a software defined radio transceiver that is compatible with the libiio library. In order to use the AD9361 in the main executable loop ensure that after the context is create you call 
+
+Note that `sdr` in this case is the go `package` `github.com/andewx/go-iio/sdr`
+
+```
+	g, err = sdr.ConnectNetwork("192.168.2.1", "ad9361")
+```
+
+This device is typically associate with the pluto adalm and will represent a larger category of devices eventually so we will look for a more user friendly way to handle this.
 
 
 

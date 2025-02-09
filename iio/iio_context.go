@@ -7,6 +7,8 @@ import "C"
 import (
 	"fmt"
 	"unsafe"
+
+	"github.com/andewx/go-iio/common"
 )
 
 // Context represents an IIO context
@@ -35,21 +37,25 @@ func CreateContext() (*Context, error) {
 
 // CreateNetworkContext creates a network context from the specified hostname
 func CreateNetworkContext(hostname string) (*Context, error) {
+	common.PrintDebug("File:iio_context.go // Line:38 // Function:CreateNetworkContext // Creating network context", hostname)
 	var err error
 	cHostname := C.CString(hostname)
 	defer C.free(unsafe.Pointer(cHostname))
+	common.PrintDebug("File:iio_context.go // Line:44 //Creating Network Device with libiio function iio_create_network_context() ->", cHostname)
 	handle := C.iio_create_network_context(cHostname)
 	if handle == nil {
 		return nil, getLastError()
 	}
-
+	common.PrintValid("Network Device created successfully")
 	ctx := &Context{handle: handle, attrs: nil}
-
+	common.PrintDebug("File:iio_context.go // Line:55 // Getting Context Attributes", ctx)
 	ctx.attrs = GetContextAttributes(handle)
-
+	common.PrintValid("Network Context attributes retrieved successfully")
 	if ctx.attrs == nil {
 		err = fmt.Errorf("Network Context attributes not available\n")
 	}
+
+	common.PrintDebug("File:iio_context.go // Line:59 // Returning Context", ctx)
 
 	return ctx, err
 }
@@ -176,6 +182,31 @@ func (ctx *Context) FindDevice(name string) (*Device, error) {
 		return nil, getLastError()
 	}
 	return &Device{handle: handle}, nil
+}
+
+// SetupDevice finds a device and connects it
+func (ctx *Context) SetupDevice(name string) (*Device, error) {
+	dev, err := ctx.FindDevice(name)
+	if err != nil {
+		ctx.Close()
+		return nil, fmt.Errorf("%s device not found: %w", name, err)
+	}
+
+	err = dev.Init()
+	if err != nil {
+		return nil, fmt.Errorf("%s device couldn't be initiated. Returned with error %w", name, err)
+	}
+
+	// Configure channels
+	for i := 0; i < len(dev.channels); i++ {
+		c := dev.channels[i]
+		c.Init()
+		if err != nil {
+			return nil, fmt.Errorf("%s device channel not initiated %w", err)
+		}
+	}
+
+	return dev, nil
 }
 
 // Close destroys the context
