@@ -21,9 +21,8 @@ const (
 
 // PHYDevice - Is a Physcial Layer Device implementation of an SDR Radio
 type PHYDevice interface {
-	Connect() error
 	Close() error
-	String() string
+	String(options *common.ConsoleOptions) string
 }
 
 // Config represents SDR-specific configuration
@@ -126,7 +125,7 @@ func GenerateRRCFilter(numTaps int, alpha float64, symbolsPerTap float64) []floa
 }
 
 // Print prints the SDR device tree along with all device attributes, channels, and channel attributes
-func (sdr *SDR) Print() {
+func (sdr *SDR) Print(options *common.ConsoleOptions) {
 	common.PrintDebug("File:sdr.go // Line:119 // Function:Print // Printing SDR Device Tree", sdr)
-	fmt.Printf("SDR Platform %s\n%s", sdr.name, sdr.Platform.String())
+	fmt.Printf("SDR Platform %s\n%s", sdr.name, sdr.Platform.String(options))
 }

@@ -7,6 +7,8 @@ import "C"
 import (
 	"fmt"
 	"unsafe"
+
+	"github.com/andewx/go-iio/common"
 )
 
 type ChannelStatus int
@@ -15,6 +17,8 @@ const (
 	ChannelStatusUnknown ChannelStatus = iota
 	ChannelStatusOK
 	ChannelStatusError
+	ChannelStatusDisabled
+	ChannelStatusEnabled
 )
 
 // Channel represents an IIO channel
@@ -22,35 +26,55 @@ type Channel struct {
 	handle     *C.struct_iio_channel
 	attributes []*ChannelAttribute
 	status     ChannelStatus
+	device     *Device
+	output     bool
+	_name      string
+	_id        string
 }
 
-func NewChannel(handle *C.struct_iio_channel) *Channel {
-	return &Channel{handle: handle, status: ChannelStatusUnknown, attributes: nil}
+// NewChannel - Creates a new channel
+func NewChannel(handle *C.struct_iio_channel, dev *Device) *Channel {
+	ch := &Channel{handle: handle, status: ChannelStatusUnknown, attributes: nil, device: dev}
+	ch.init()
+	return ch
 }
 
-// Init() - After a handle for a channel is recieved we initiate the channel which merely reads in its attributes
-func (ch *Channel) Init() error {
-	var err error
+// Init - After a handle for a channel is recieved we initiate the channel which merely reads in its attributes
+func (ch *Channel) init() error {
 	ch.attributes = GetChannelAttributes(ch.handle)
-	if ch.attributes == nil {
-		err = fmt.Errorf("Unable to establish IIO Connection to Channel and read attributes")
-		return err
-	}
+	ch.output = ch.IsOutput()
+	ch._name = ch.name()
+	ch._id = ch.id()
+	ch.status = ChannelStatusOK
+	common.PrintDebug(fmt.Sprintf("file iio_channel.go::init|%s", ch._name), ch)
 	return nil
 }
 
 // GetID returns the ID of the channel
-func (ch *Channel) GetID() string {
-	return C.GoString(C.iio_channel_get_id(ch.handle))
+func (ch *Channel) id() string {
+	str := C.GoString(C.iio_channel_get_id(ch.handle))
+	return str
 }
 
-// GetName returns the name of the channel
-func (ch *Channel) GetName() string {
-	name := C.iio_channel_get_name(ch.handle)
-	if name == nil {
-		return ""
+func (ch *Channel) name() string {
+	str := C.GoString(C.iio_channel_get_name(ch.handle))
+	if str == "" {
+		return ch.id()
 	}
-	return C.GoString(name)
+	return str
+}
+
+// DirectionalName returns the name of the channel with the direction prefix
+func (ch *Channel) DirectionalName() string {
+	if ch.output {
+		return "OUT_" + ch.Name()
+	}
+	return "IN_" + ch.Name()
+}
+
+// Name returns the name of the channel
+func (ch *Channel) Name() string {
+	return ch._name
 }
 
 // IsOutput returns true if the channel is an output channel
@@ -66,16 +90,33 @@ func (ch *Channel) IsScanned() bool {
 // Enable enables the channel
 func (ch *Channel) Enable() {
 	C.iio_channel_enable(ch.handle)
+	ch.status = ChannelStatusEnabled
 }
 
 // Disable disables the channel
 func (ch *Channel) Disable() {
 	C.iio_channel_disable(ch.handle)
+	ch.status = ChannelStatusDisabled
 }
 
 // IsEnabled returns true if the channel is enabled
 func (ch *Channel) IsEnabled() bool {
 	return bool(C.iio_channel_is_enabled(ch.handle))
+}
+
+// GetChannelsCount returns the number of channels in the device
+func GetChannelsCount(dev *Device) int {
+	return int(C.iio_device_get_channels_count(dev.handle))
+}
+
+// GetChannels returns all channels in the device
+func GetChannels(dev *Device) []*Channel {
+	count := GetChannelsCount(dev)
+	channels := make([]*Channel, count)
+	for i := 0; i < count; i++ {
+		channels[i] = NewChannel(C.iio_device_get_channel(dev.handle, C.uint(i)), dev)
+	}
+	return channels
 }
 
 // GetAttr returns the value of the specified attribute

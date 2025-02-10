@@ -37,8 +37,6 @@ func DeviceTest(t *testing.T) {
 		t.Errorf("Unable to connect to Network Device %s at %s \n", host, name)
 	}
 
-	g.Print()
-
 	fmt.Printf("exiting...\n")
 
 }

@@ -45,17 +45,21 @@ func newAD9361(ctx *iio.Context) (*AD9361, error) {
 	common.PrintDebug("File:pluto.go // Line:73 // Function:newAD9361 // Creating AD9361 device", ctx)
 
 	// Find devices
-	phy, err := ctx.SetupDevice("ad9361-phy")
+	phy, err := ctx.FindDevice("ad9361-phy")
 	if err != nil {
 		return nil, fmt.Errorf("failed to find PHY device: %w", err)
 	}
 
-	rx, err := ctx.SetupDevice("cf-ad9361-lpc")
+	common.PrintValid("File:pluto.go // Line:54 // Function:newAD9361 // PHY device found")
+
+	rx, err := ctx.FindDevice("cf-ad9361-lpc")
 	if err != nil {
 		return nil, fmt.Errorf("failed to find RX device: %w", err)
 	}
 
-	tx, err := ctx.SetupDevice("cf-ad9361-dds-core-lpc")
+	common.PrintValid("File:pluto.go // Line:54 // Function:newAD9361 // RX device found")
+
+	tx, err := ctx.FindDevice("cf-ad9361-dds-core-lpc")
 	if err != nil {
 		return nil, fmt.Errorf("failed to find TX device: %w", err)
 	}
@@ -68,33 +72,6 @@ func newAD9361(ctx *iio.Context) (*AD9361, error) {
 	}
 
 	return dev, nil
-}
-
-// Connect - Connects to the AD9361 device
-func (dev *AD9361) Connect() error {
-
-	common.PrintDebug("File:pluto.go // Line:73 // Function:Connect // Connecting to AD9361 device", dev)
-
-	var err error
-	err = dev.phy.Init()
-
-	if err != nil {
-		return fmt.Errorf("failed to initialized PHY device: %w", err)
-	}
-
-	err = dev.tx.Init()
-
-	if err != nil {
-		return fmt.Errorf("failed to initialized TX device: %w", err)
-	}
-
-	err = dev.rx.Init()
-
-	if err != nil {
-		return fmt.Errorf("failed to initialized RX device: %w", err)
-	}
-
-	return nil
 }
 
 // Configure applies the configuration to the AD9361 device
@@ -319,7 +296,7 @@ func (dev *AD9361) SetFIRFilter(taps []int16) error {
 }
 
 // Print - prints device info
-func (dev *AD9361) String() string {
+func (dev *AD9361) String(options *common.ConsoleOptions) string {
 	var deviceList [3]*iio.Device
 	deviceList[0] = dev.phy
 	deviceList[1] = dev.tx
@@ -327,12 +304,18 @@ func (dev *AD9361) String() string {
 	var strbuild string
 	for _, device := range deviceList {
 		strbuild += fmt.Sprintf("%sDEVICE:%s %s\n", common.CONSOLE_GREEN, common.CONSOLE_RESET, device.GetName())
-		strbuild += fmt.Sprintf("	Attributes:\n")
-		attrs := device.GetAttributes()
 
-		for _, str := range attrs {
-			if str != "" {
-				strbuild += fmt.Sprintf("		%s\n", str)
+		if options.AttrName {
+			strbuild += fmt.Sprintf("	Attributes:\n")
+			attrs := device.GetAttributes()
+			for _, attr := range attrs {
+				if attr != nil {
+					strbuild += fmt.Sprintf("		%s\n", attr.GetName())
+
+					if options.AttrVal {
+						strbuild += fmt.Sprintf("		%s\n", attr.GetValue())
+					}
+				}
 			}
 		}
 
@@ -340,9 +323,9 @@ func (dev *AD9361) String() string {
 		channels := device.GetChannels()
 		for _, channel := range channels {
 			if channel != nil {
-				name := channel.GetName()
+				name := channel.DirectionalName()
 				if name != "" {
-					strbuild += fmt.Sprintf("		%s\n", channel.GetName())
+					strbuild += fmt.Sprintf("		%s\n", name)
 				}
 
 			}

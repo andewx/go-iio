@@ -1,0 +1,704 @@
+{
+	"iio_info_version": "0.26 (git tag:5e1e9cb5)",
+	"libiio_version": "0.26 (git tag: 5e1e9cb) backends: xml ip usb",
+	"context": {
+	  "backend_version": "0.26 (git tag: v0.26)",
+	  "backend_description": "192.168.2.1 Linux (none) 6.1.0-gf3da30df6004 #5 SMP PREEMPT Tue Oct 15 10:50:00 CEST 2024 armv7l",
+	  "attributes": {
+		"hw_model": "Analog Devices PlutoSDR Rev.C (Z7010-AD9363A)",
+		"hw_model_variant": "1",
+		"hw_serial": "104473e6a60f0001eaff2300242c173753",
+		"fw_version": "v0.39",
+		"ad9361-phy,xo_correction": "40000038",
+		"ad9361-phy,model": "ad9363a",
+		"local,kernel": "6.1.0-gf3da30df6004",
+		"uri": "ip:192.168.2.1",
+		"ip,ip-addr": "192.168.2.1"
+	  }
+	},
+	"devices": [
+	  {
+		"name": "iio:device0",
+		"description": "ad9361-phy",
+		"channels": [
+		  {
+			"name": "altvoltage1",
+			"type": "TX_LO",
+			"direction": "output",
+			"attributes": {
+			  "external": "0",
+			  "fastlock_load": "0",
+			  "fastlock_recall": "ERROR: Invalid argument (22)",
+			  "fastlock_save": "0 196,221,244,201,86,255,22,197,196,220,119,84,129,104,69,88",
+			  "fastlock_store": "0",
+			  "frequency": "2449999998",
+			  "frequency_available": "[325000000 1 3800000000]",
+			  "label": "TX_LO",
+			  "powerdown": "0"
+			}
+		  },
+		  {
+			"name": "voltage0",
+			"type": "input",
+			"attributes": {
+			  "bb_dc_offset_tracking_en": "1",
+			  "filter_fir_en": "0",
+			  "gain_control_mode": "slow_attack",
+			  "gain_control_mode_available": "manual fast_attack slow_attack hybrid",
+			  "hardwaregain": "71.000000 dB",
+			  "hardwaregain_available": "[-3 1 71]",
+			  "quadrature_tracking_en": "1",
+			  "rf_bandwidth": "18000000",
+			  "rf_bandwidth_available": "[200000 1 56000000]",
+			  "rf_dc_offset_tracking_en": "1",
+			  "rf_port_select": "A_BALANCED",
+			  "rf_port_select_available": "A_BALANCED B_BALANCED C_BALANCED A_N A_P B_N B_P C_N C_P TX_MONITOR1 TX_MONITOR2 TX_MONITOR1_2",
+			  "rssi": "114.00 dB",
+			  "sampling_frequency": "30719999",
+			  "sampling_frequency_available": "[2083333 1 61440000]"
+			}
+		  },
+		  {
+			"name": "voltage3",
+			"type": "output",
+			"attributes": {
+			  "filter_fir_en": "0",
+			  "raw": "306",
+			  "rf_bandwidth": "18000000",
+			  "rf_bandwidth_available": "[200000 1 40000000]",
+			  "rf_port_select_available": "A B",
+			  "sampling_frequency": "30719999",
+			  "sampling_frequency_available": "[2083333 1 61440000]",
+			  "scale": "1.000000"
+			}
+		  },
+		  {
+			"name": "altvoltage0",
+			"type": "RX_LO",
+			"direction": "output",
+			"attributes": {
+			  "external": "0",
+			  "fastlock_load": "0",
+			  "fastlock_recall": "ERROR: Invalid argument (22)",
+			  "fastlock_save": "0 223,189,49,179,117,189,85,21,179,227,245,51,53,179,164,177",
+			  "fastlock_store": "0",
+			  "frequency": "2400000000",
+			  "frequency_available": "[325000000 1 3800000000]",
+			  "label": "RX_LO",
+			  "powerdown": "0"
+			}
+		  },
+		  {
+			"name": "voltage2",
+			"type": "output",
+			"attributes": {
+			  "filter_fir_en": "0",
+			  "raw": "306",
+			  "rf_bandwidth": "18000000",
+			  "rf_bandwidth_available": "[200000 1 40000000]",
+			  "rf_port_select_available": "A B",
+			  "sampling_frequency": "30719999",
+			  "sampling_frequency_available": "[2083333 1 61440000]",
+			  "scale": "1.000000"
+			}
+		  },
+		  {
+			"name": "temp0",
+			"type": "input",
+			"attributes": {
+			  "input": "36842"
+			}
+		  },
+		  {
+			"name": "voltage0",
+			"type": "output",
+			"attributes": {
+			  "filter_fir_en": "0",
+			  "hardwaregain": "-10.000000 dB",
+			  "hardwaregain_available": "[-89.750000 0.250000 0.000000]",
+			  "rf_bandwidth": "18000000",
+			  "rf_bandwidth_available": "[200000 1 40000000]",
+			  "rf_port_select": "A",
+			  "rf_port_select_available": "A B",
+			  "rssi": "0.00 dB",
+			  "sampling_frequency": "30719999",
+			  "sampling_frequency_available": "[2083333 1 61440000]"
+			}
+		  },
+		  {
+			"name": "voltage2",
+			"type": "input",
+			"attributes": {
+			  "bb_dc_offset_tracking_en": "1",
+			  "filter_fir_en": "0",
+			  "gain_control_mode_available": "manual fast_attack slow_attack hybrid",
+			  "offset": "57",
+			  "quadrature_tracking_en": "1",
+			  "raw": "1091",
+			  "rf_bandwidth": "18000000",
+			  "rf_bandwidth_available": "[200000 1 56000000]",
+			  "rf_dc_offset_tracking_en": "1",
+			  "rf_port_select_available": "A_BALANCED B_BALANCED C_BALANCED A_N A_P B_N B_P C_N C_P TX_MONITOR1 TX_MONITOR2 TX_MONITOR1_2",
+			  "sampling_frequency": "30719999",
+			  "sampling_frequency_available": "[2083333 1 61440000]",
+			  "scale": "0.305250"
+			}
+		  },
+		  {
+			"name": "out",
+			"type": "input",
+			"warning": "WARN:iio_channel_get_type()=UNKNOWN",
+			"attributes": {
+			  "voltage_filter_fir_en": "0"
+			}
+		  }
+		],
+		"device_specific_attributes": {
+		  "calib_mode": "auto",
+		  "calib_mode_available": "auto manual manual_tx_quad tx_quad rf_dc_offs rssi_gain_step",
+		  "dcxo_tune_coarse": "ERROR: Operation not supported by device (19)",
+		  "dcxo_tune_coarse_available": "[0 0 0]",
+		  "dcxo_tune_fine": "ERROR: Operation not supported by device (19)",
+		  "dcxo_tune_fine_available": "[0 0 0]",
+		  "ensm_mode": "fdd",
+		  "ensm_mode_available": "sleep wait alert fdd pinctrl pinctrl_fdd_indep",
+		  "filter_fir_config": "FIR Rx: 0,0 Tx: 0,0",
+		  "gain_table_config": "<gaintable AD9361 type=FULL dest=3 start=1300000000 end=4000000000>",
+		  "multichip_sync": "ERROR: Permission denied (13)",
+		  "rssi_gain_step_error": "lna_error: 0 0 0 0\nmixer_error: 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0\ngain_step_calib_reg_val: 0 0 0 0 0",
+		  "rx_path_rates": "BBPLL:983039996 ADC:245759999 R2:122879999 R1:61439999 RF:30719999 RXSAMP:30719999",
+		  "trx_rate_governor": "nominal",
+		  "trx_rate_governor_available": "nominal highest_osr",
+		  "tx_path_rates": "BBPLL:983039996 DAC:122879999 T2:122879999 T1:61439999 TF:30719999 TXSAMP:30719999",
+		  "waiting_for_supplier": "0",
+		  "xo_correction": "40000038",
+		  "xo_correction_available": "[39992038 1 40008038]"
+		},
+		"debug_attributes": {
+		  "digital_tune": "0",
+		  "calibration_switch_control": "0",
+		  "multichip_sync": "0",
+		  "gaininfo_rx2": "ERROR: Resource deadlock avoided (11)",
+		  "gaininfo_rx1": "69 74 0 0 0 0 0 0",
+		  "bist_timing_analysis": "0",
+		  "gpo_set": "0",
+		  "bist_tone": "0",
+		  "bist_prbs": "0",
+		  "loopback": "0",
+		  "initialize": "0",
+		  "adi,bb-clk-change-dig-tune-enable": "0",
+		  "adi,axi-half-dac-rate-enable": "0",
+		  "adi,txmon-2-lo-cm": "48",
+		  "adi,txmon-1-lo-cm": "48",
+		  "adi,txmon-2-front-end-gain": "2",
+		  "adi,txmon-1-front-end-gain": "2",
+		  "adi,txmon-duration": "8192",
+		  "adi,txmon-delay": "511",
+		  "adi,txmon-one-shot-mode-enable": "0",
+		  "adi,txmon-dc-tracking-enable": "0",
+		  "adi,txmon-high-gain": "24",
+		  "adi,txmon-low-gain": "0",
+		  "adi,txmon-low-high-thresh": "37000",
+		  "adi,gpo3-tx-delay-us": "0",
+		  "adi,gpo3-rx-delay-us": "0",
+		  "adi,gpo2-tx-delay-us": "0",
+		  "adi,gpo2-rx-delay-us": "0",
+		  "adi,gpo1-tx-delay-us": "0",
+		  "adi,gpo1-rx-delay-us": "0",
+		  "adi,gpo0-tx-delay-us": "0",
+		  "adi,gpo0-rx-delay-us": "0",
+		  "adi,gpo3-slave-tx-enable": "0",
+		  "adi,gpo3-slave-rx-enable": "0",
+		  "adi,gpo2-slave-tx-enable": "0",
+		  "adi,gpo2-slave-rx-enable": "0",
+		  "adi,gpo1-slave-tx-enable": "0",
+		  "adi,gpo1-slave-rx-enable": "0",
+		  "adi,gpo0-slave-tx-enable": "0",
+		  "adi,gpo0-slave-rx-enable": "0",
+		  "adi,gpo3-inactive-state-high-enable": "0",
+		  "adi,gpo2-inactive-state-high-enable": "0",
+		  "adi,gpo1-inactive-state-high-enable": "0",
+		  "adi,gpo0-inactive-state-high-enable": "0",
+		  "adi,gpo-manual-mode-enable-mask": "0",
+		  "adi,gpo-manual-mode-enable": "0",
+		  "adi,aux-dac2-tx-delay-us": "0",
+		  "adi,aux-dac2-rx-delay-us": "0",
+		  "adi,aux-dac2-active-in-alert-enable": "0",
+		  "adi,aux-dac2-active-in-tx-enable": "0",
+		  "adi,aux-dac2-active-in-rx-enable": "0",
+		  "adi,aux-dac2-default-value-mV": "0",
+		  "adi,aux-dac1-tx-delay-us": "0",
+		  "adi,aux-dac1-rx-delay-us": "0",
+		  "adi,aux-dac1-active-in-alert-enable": "0",
+		  "adi,aux-dac1-active-in-tx-enable": "0",
+		  "adi,aux-dac1-active-in-rx-enable": "0",
+		  "adi,aux-dac1-default-value-mV": "0",
+		  "adi,aux-dac-manual-mode-enable": "1",
+		  "adi,aux-adc-decimation": "256",
+		  "adi,aux-adc-rate": "40000000",
+		  "adi,temp-sense-decimation": "256",
+		  "adi,temp-sense-periodic-measurement-enable": "1",
+		  "adi,temp-sense-offset-signed": "206",
+		  "adi,temp-sense-measurement-interval-ms": "1000",
+		  "adi,elna-gaintable-all-index-enable": "0",
+		  "adi,elna-rx2-gpo1-control-enable": "0",
+		  "adi,elna-rx1-gpo0-control-enable": "0",
+		  "adi,elna-bypass-loss-mdB": "0",
+		  "adi,elna-gain-mdB": "0",
+		  "adi,elna-settling-delay-ns": "0",
+		  "adi,ctrl-outs-enable-mask": "255",
+		  "adi,ctrl-outs-index": "0",
+		  "adi,rssi-duration": "1000",
+		  "adi,rssi-wait": "1",
+		  "adi,rssi-delay": "1",
+		  "adi,rssi-unit-is-rx-samples-enable": "0",
+		  "adi,rssi-restart-mode": "3",
+		  "adi,fagc-adc-large-overload-inc-steps": "2",
+		  "adi,fagc-power-measurement-duration-in-state5": "64",
+		  "adi,fagc-rst-gla-if-en-agc-pulled-high-mode": "0",
+		  "adi,fagc-rst-gla-en-agc-pulled-high-enable": "0",
+		  "adi,fagc-rst-gla-large-lmt-overload-enable": "1",
+		  "adi,fagc-rst-gla-large-adc-overload-enable": "1",
+		  "adi,fagc-energy-lost-stronger-sig-gain-lock-exit-cnt": "8",
+		  "adi,fagc-rst-gla-engergy-lost-sig-thresh-below-ll": "10",
+		  "adi,fagc-rst-gla-engergy-lost-goto-optim-gain-enable": "1",
+		  "adi,fagc-rst-gla-engergy-lost-sig-thresh-exceeded-enable": "1",
+		  "adi,fagc-rst-gla-stronger-sig-thresh-above-ll": "10",
+		  "adi,fagc-optimized-gain-offset": "5",
+		  "adi,fagc-rst-gla-stronger-sig-thresh-exceeded-enable": "1",
+		  "adi,fagc-use-last-lock-level-for-set-gain-enable": "1",
+		  "adi,fagc-gain-index-type-after-exit-rx-mode": "0",
+		  "adi,fagc-gain-increase-after-gain-lock-enable": "0",
+		  "adi,fagc-final-overrange-count": "3",
+		  "adi,fagc-lmt-final-settling-steps": "1",
+		  "adi,fagc-lpf-final-settling-steps": "1",
+		  "adi,fagc-lock-level-gain-increase-upper-limit": "5",
+		  "adi,fagc-lock-level-lmt-gain-increase-enable": "1",
+		  "adi,fagc-lp-thresh-increment-steps": "1",
+		  "adi,fagc-lp-thresh-increment-time": "5",
+		  "adi,fagc-allow-agc-gain-increase-enable": "0",
+		  "adi,fagc-state-wait-time-ns": "260",
+		  "adi,fagc-dec-pow-measurement-duration": "64",
+		  "adi,agc-immed-gain-change-if-large-lmt-overload-enable": "0",
+		  "adi,agc-immed-gain-change-if-large-adc-overload-enable": "0",
+		  "adi,agc-gain-update-interval-us": "1000",
+		  "adi,agc-sync-for-gain-counter-enable": "0",
+		  "adi,agc-dig-gain-step-size": "4",
+		  "adi,agc-dig-saturation-exceed-counter": "3",
+		  "adi,agc-lmt-overload-large-inc-steps": "2",
+		  "adi,agc-lmt-overload-small-exceed-counter": "10",
+		  "adi,agc-lmt-overload-large-exceed-counter": "10",
+		  "adi,agc-adc-lmt-small-overload-prevent-gain-inc-enable": "0",
+		  "adi,agc-adc-large-overload-inc-steps": "2",
+		  "adi,agc-adc-large-overload-exceed-counter": "10",
+		  "adi,agc-adc-small-overload-exceed-counter": "10",
+		  "adi,agc-dig-sat-ovrg-enable": "0",
+		  "adi,agc-outer-thresh-low-inc-steps": "2",
+		  "adi,agc-outer-thresh-low": "18",
+		  "adi,agc-inner-thresh-low-inc-steps": "1",
+		  "adi,agc-inner-thresh-low": "12",
+		  "adi,agc-inner-thresh-high-dec-steps": "1",
+		  "adi,agc-inner-thresh-high": "10",
+		  "adi,agc-outer-thresh-high-dec-steps": "2",
+		  "adi,agc-outer-thresh-high": "5",
+		  "adi,agc-attack-delay-extra-margin-us": "1",
+		  "adi,mgc-split-table-ctrl-inp-gain-mode": "0",
+		  "adi,mgc-dec-gain-step": "2",
+		  "adi,mgc-inc-gain-step": "2",
+		  "adi,mgc-rx2-ctrl-inp-enable": "0",
+		  "adi,mgc-rx1-ctrl-inp-enable": "0",
+		  "adi,gc-use-rx-fir-out-for-dec-pwr-meas-enable": "0",
+		  "adi,gc-max-dig-gain": "15",
+		  "adi,gc-dig-gain-enable": "0",
+		  "adi,gc-low-power-thresh": "24",
+		  "adi,gc-dec-pow-measurement-duration": "8192",
+		  "adi,gc-lmt-overload-low-thresh": "704",
+		  "adi,gc-lmt-overload-high-thresh": "800",
+		  "adi,gc-adc-large-overload-thresh": "58",
+		  "adi,gc-adc-small-overload-thresh": "47",
+		  "adi,gc-adc-ovr-sample-size": "4",
+		  "adi,gc-rx2-mode": "2",
+		  "adi,gc-rx1-mode": "2",
+		  "adi,update-tx-gain-in-alert-enable": "0",
+		  "adi,tx-attenuation-mdB": "10000",
+		  "adi,rf-tx-bandwidth-hz": "18000000",
+		  "adi,rf-rx-bandwidth-hz": "18000000",
+		  "adi,qec-tracking-slow-mode-enable": "0",
+		  "adi,dc-offset-count-low-range": "50",
+		  "adi,dc-offset-count-high-range": "40",
+		  "adi,dc-offset-attenuation-low-range": "5",
+		  "adi,dc-offset-attenuation-high-range": "6",
+		  "adi,dc-offset-tracking-update-event-mask": "5",
+		  "adi,clk-output-mode-select": "0",
+		  "adi,tx-lo-powerdown-managed-enable": "1",
+		  "adi,trx-synthesizer-target-fref-overwrite-hz": "80008000",
+		  "adi,rx1-rx2-phase-inversion-enable": "0",
+		  "adi,tx-rf-port-input-select-lock-enable": "1",
+		  "adi,rx-rf-port-input-select-lock-enable": "1",
+		  "adi,tx-rf-port-input-select": "0",
+		  "adi,rx-rf-port-input-select": "0",
+		  "adi,split-gain-table-mode-enable": "0",
+		  "adi,1rx-1tx-mode-use-tx-num": "1",
+		  "adi,1rx-1tx-mode-use-rx-num": "1",
+		  "adi,2rx-2tx-mode-enable": "0",
+		  "adi,digital-interface-tune-fir-disable": "1",
+		  "adi,digital-interface-tune-skip-mode": "0",
+		  "adi,tx-fastlock-pincontrol-enable": "0",
+		  "adi,rx-fastlock-pincontrol-enable": "0",
+		  "adi,rx-fastlock-delay-ns": "0",
+		  "adi,tx-fastlock-delay-ns": "0",
+		  "adi,tdd-skip-vco-cal-enable": "0",
+		  "adi,tdd-use-dual-synth-mode-enable": "0",
+		  "adi,debug-mode-enable": "0",
+		  "adi,ensm-enable-txnrx-control-enable": "0",
+		  "adi,ensm-enable-pin-pulse-mode-enable": "0",
+		  "adi,frequency-division-duplex-independent-mode-enable": "0",
+		  "adi,frequency-division-duplex-mode-enable": "1",
+		  "direct_reg_access": "0x0"
+		}
+	  },
+	  {
+		"name": "iio:device1",
+		"description": "xadc",
+		"channels": [
+		  {
+			"name": "voltage5",
+			"type": "vccoddr",
+			"direction": "input",
+			"attributes": {
+			  "label": "vccoddr",
+			  "raw": "1825",
+			  "scale": "0.732421875"
+			}
+		  },
+		  {
+			"name": "voltage0",
+			"type": "vccint",
+			"direction": "input",
+			"attributes": {
+			  "label": "vccint",
+			  "raw": "1380",
+			  "scale": "0.732421875"
+			}
+		  },
+		  {
+			"name": "voltage4",
+			"type": "vccpaux",
+			"direction": "input",
+			"attributes": {
+			  "label": "vccpaux",
+			  "raw": "2455",
+			  "scale": "0.732421875"
+			}
+		  },
+		  {
+			"name": "temp0",
+			"type": "input",
+			"attributes": {
+			  "offset": "-2219",
+			  "raw": "2664",
+			  "scale": "123.040771484"
+			}
+		  },
+		  {
+			"name": "voltage7",
+			"type": "vrefn",
+			"direction": "input",
+			"attributes": {
+			  "label": "vrefn",
+			  "raw": "-1",
+			  "scale": "0.732421875"
+			}
+		  },
+		  {
+			"name": "voltage1",
+			"type": "vccaux",
+			"direction": "input",
+			"attributes": {
+			  "label": "vccaux",
+			  "raw": "2457",
+			  "scale": "0.732421875"
+			}
+		  },
+		  {
+			"name": "voltage2",
+			"type": "vccbram",
+			"direction": "input",
+			"attributes": {
+			  "label": "vccbram",
+			  "raw": "1383",
+			  "scale": "0.732421875"
+			}
+		  },
+		  {
+			"name": "voltage3",
+			"type": "vccpint",
+			"direction": "input",
+			"attributes": {
+			  "label": "vccpint",
+			  "raw": "1370",
+			  "scale": "0.732421875"
+			}
+		  },
+		  {
+			"name": "voltage8",
+			"type": "input",
+			"attributes": {
+			  "raw": "3300",
+			  "scale": "0.244140625"
+			}
+		  },
+		  {
+			"name": "voltage6",
+			"type": "vrefp",
+			"direction": "input",
+			"attributes": {
+			  "label": "vrefp",
+			  "raw": "1702",
+			  "scale": "0.732421875"
+			}
+		  }
+		],
+		"device_specific_attributes": {
+		  "sampling_frequency": "961538",
+		  "waiting_for_supplier": "0"
+		}
+	  },
+	  {
+		"name": "iio:device2",
+		"description": "one-bit-adc-dac",
+		"channels": [
+		  {
+			"name": "voltage0",
+			"type": "input",
+			"attributes": {
+			  "label": "muxout",
+			  "raw": "0"
+			}
+		  },
+		  {
+			"name": "voltage0",
+			"type": "output",
+			"attributes": {
+			  "label": "phaser_enable",
+			  "raw": "0"
+			}
+		  }
+		],
+		"device_specific_attributes": {
+		  "waiting_for_supplier": "0"
+		}
+	  },
+	  {
+		"name": "iio:device3",
+		"description": "cf-ad9361-dds-core-lpc",
+		"buffer_capable": true,
+		"channels": [
+		  {
+			"name": "voltage0",
+			"type": "output",
+			"index": "0",
+			"format": "le:S16/16>>0",
+			"attributes": {
+			  "calibphase": "0.000000",
+			  "calibscale": "1.000000",
+			  "sampling_frequency": "30719999",
+			  "sampling_frequency_available": "30719999 3839999"
+			}
+		  },
+		  {
+			"name": "voltage1",
+			"type": "output",
+			"index": "1",
+			"format": "le:S16/16>>0",
+			"attributes": {
+			  "calibphase": "0.000000",
+			  "calibscale": "1.000000",
+			  "sampling_frequency": "30719999",
+			  "sampling_frequency_available": "30719999 3839999"
+			}
+		  },
+		  {
+			"name": "altvoltage3",
+			"type": "TX1_Q_F2",
+			"direction": "output",
+			"attributes": {
+			  "frequency": "9279985",
+			  "label": "TX1_Q_F2",
+			  "phase": "0",
+			  "raw": "1",
+			  "sampling_frequency": "30719999",
+			  "scale": "0.000000"
+			}
+		  },
+		  {
+			"name": "altvoltage1",
+			"type": "TX1_I_F2",
+			"direction": "output",
+			"attributes": {
+			  "frequency": "9279985",
+			  "label": "TX1_I_F2",
+			  "phase": "90000",
+			  "raw": "1",
+			  "sampling_frequency": "30719999",
+			  "scale": "0.000000"
+			}
+		  },
+		  {
+			"name": "altvoltage0",
+			"type": "TX1_I_F1",
+			"direction": "output",
+			"attributes": {
+			  "frequency": "9279985",
+			  "label": "TX1_I_F1",
+			  "phase": "90000",
+			  "raw": "1",
+			  "sampling_frequency": "30719999",
+			  "scale": "0.000000"
+			}
+		  },
+		  {
+			"name": "altvoltage2",
+			"type": "TX1_Q_F1",
+			"direction": "output",
+			"attributes": {
+			  "frequency": "9279985",
+			  "label": "TX1_Q_F1",
+			  "phase": "0",
+			  "raw": "1",
+			  "sampling_frequency": "30719999",
+			  "scale": "0.000000"
+			}
+		  }
+		],
+		"device_specific_attributes": {
+		  "sync_start_enable": "arm",
+		  "sync_start_enable_available": "arm",
+		  "waiting_for_supplier": "0"
+		},
+		"buffer_specific_attributes": {
+		  "data_available": "0",
+		  "direction": "out",
+		  "length_align_bytes": "8"
+		},
+		"debug_attributes": {
+		  "direct_reg_access": "0x90262"
+		}
+	  },
+	  {
+		"name": "iio:device4",
+		"description": "cf-ad9361-lpc",
+		"buffer_capable": true,
+		"channels": [
+		  {
+			"name": "voltage0",
+			"type": "input",
+			"index": "0",
+			"format": "le:S12/16>>0",
+			"attributes": {
+			  "calibbias": "0",
+			  "calibphase": "0.000000",
+			  "calibscale": "1.000000",
+			  "samples_pps": "ERROR: Operation not supported by device (19)",
+			  "sampling_frequency": "30719999",
+			  "sampling_frequency_available": "30719999 3839999"
+			}
+		  },
+		  {
+			"name": "voltage1",
+			"type": "input",
+			"index": "1",
+			"format": "le:S12/16>>0",
+			"attributes": {
+			  "calibbias": "0",
+			  "calibphase": "0.000000",
+			  "calibscale": "1.000000",
+			  "samples_pps": "ERROR: Operation not supported by device (19)",
+			  "sampling_frequency": "30719999",
+			  "sampling_frequency_available": "30719999 3839999"
+			}
+		  }
+		],
+		"device_specific_attributes": {
+		  "sync_start_enable": "disarm",
+		  "sync_start_enable_available": "arm",
+		  "waiting_for_supplier": "0"
+		},
+		"buffer_specific_attributes": {
+		  "data_available": "0",
+		  "direction": "in",
+		  "length_align_bytes": "8"
+		},
+		"debug_attributes": {
+		  "pseudorandom_err_check": "CH0 : PN9 : Out of Sync : PN Error\nCH1 : PN9 : Out of Sync : PN Error",
+		  "direct_reg_access": "0x0"
+		}
+	  },
+	  {
+		"name": "iio:device5",
+		"description": "adi-iio-fakedev",
+		"label": "iio-axi-tdd-0",
+		"channels": [
+		  {
+			"name": "channel2",
+			"type": "output",
+			"warning": "WARN:iio_channel_get_type()=UNKNOWN",
+			"attributes": {
+			  "enable": "0",
+			  "off_ms": "0.000000",
+			  "off_raw": "0",
+			  "on_ms": "0.000000",
+			  "on_raw": "0",
+			  "polarity": "0"
+			}
+		  },
+		  {
+			"name": "channel0",
+			"type": "output",
+			"warning": "WARN:iio_channel_get_type()=UNKNOWN",
+			"attributes": {
+			  "enable": "0",
+			  "off_ms": "0.000000",
+			  "off_raw": "0",
+			  "on_ms": "0.000000",
+			  "on_raw": "0",
+			  "polarity": "0"
+			}
+		  },
+		  {
+			"name": "channel1",
+			"type": "output",
+			"warning": "WARN:iio_channel_get_type()=UNKNOWN",
+			"attributes": {
+			  "enable": "0",
+			  "off_ms": "0.000000",
+			  "off_raw": "0",
+			  "on_ms": "0.000000",
+			  "on_raw": "0",
+			  "polarity": "0"
+			}
+		  }
+		],
+		"device_specific_attributes": {
+		  "burst_count": "0",
+		  "core_id": "0",
+		  "enable": "0",
+		  "frame_length_ms": "0.000000",
+		  "frame_length_raw": "0",
+		  "internal_sync_period_ms": "0.000000",
+		  "internal_sync_period_raw": "0",
+		  "magic": "0x5444444e",
+		  "scratch": "0x00000000",
+		  "startup_delay_ms": "0.000000",
+		  "startup_delay_raw": "0",
+		  "state": "0",
+		  "sync_external": "0",
+		  "sync_internal": "0",
+		  "sync_reset": "0",
+		  "sync_soft": "ERROR: Permission denied (13)",
+		  "version": "2.00.b",
+		  "waiting_for_supplier": "0"
+		}
+	  }
+	]
+  }

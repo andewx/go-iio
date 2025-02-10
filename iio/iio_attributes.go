@@ -84,7 +84,8 @@ func (attr *ChannelAttribute) GetData() []byte {
 //-----------------------------------------------
 
 type DeviceAttribute struct {
-	name string
+	name  string
+	value string
 }
 
 // newDeviceAttribute creates a new DeviceAttribute with the given name.
@@ -106,16 +107,25 @@ func GetDeviceAttributesCount(handle *C.struct_iio_device) int {
 func GetDeviceAttributes(handle *C.struct_iio_device) []*DeviceAttribute {
 	count := GetDeviceAttributesCount(handle)
 	attributes := make([]*DeviceAttribute, count)
+	cstrbuf := (*C.char)(C.malloc(C.size_t(1024)))
 	for i := 0; i < count; i++ {
-		attributes[i] = newDeviceAttribute(C.GoString(C.iio_device_get_attr(handle, C.uint(i))))
+		attrname := C.iio_device_get_attr(handle, C.uint(i))
+		attributes[i] = newDeviceAttribute(C.GoString(attrname))
+		C.iio_device_attr_read(handle, attrname, cstrbuf, 1024)
+		attributes[i].value = C.GoString(cstrbuf)
 	}
 	return attributes
 }
 
-//-----------------------------------------------
-// Context Attributes -- context attributes have both a name and value
-//-----------------------------------------------
+// GetValue returns the value of the DeviceAttribute.
+func (attr *DeviceAttribute) GetValue() string {
+	return attr.value
+}
 
+// -----------------------------------------------
+// Context Attributes -- context attributes have both a name and value
+// -----------------------------------------------
+// ContextAttribute is a struct that contains a name and value.
 type ContextAttribute struct {
 	name  string
 	value string

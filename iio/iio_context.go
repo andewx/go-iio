@@ -181,31 +181,11 @@ func (ctx *Context) FindDevice(name string) (*Device, error) {
 	if handle == nil {
 		return nil, getLastError()
 	}
-	return &Device{handle: handle}, nil
-}
-
-// SetupDevice finds a device and connects it
-func (ctx *Context) SetupDevice(name string) (*Device, error) {
-	dev, err := ctx.FindDevice(name)
-	if err != nil {
-		ctx.Close()
-		return nil, fmt.Errorf("%s device not found: %w", name, err)
+	dev := NewDevice(handle)
+	if dev == nil {
+		return nil, fmt.Errorf("%s device couldn't be initiated", name)
 	}
-
-	err = dev.Init()
-	if err != nil {
-		return nil, fmt.Errorf("%s device couldn't be initiated. Returned with error %w", name, err)
-	}
-
-	// Configure channels
-	for i := 0; i < len(dev.channels); i++ {
-		c := dev.channels[i]
-		c.Init()
-		if err != nil {
-			return nil, fmt.Errorf("%s device channel not initiated %w", err)
-		}
-	}
-
+	common.PrintDebug(fmt.Sprintf("file iio_context.go::FindDevice|%s", dev._name), dev)
 	return dev, nil
 }
 

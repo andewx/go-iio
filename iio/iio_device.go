@@ -7,6 +7,8 @@ import "C"
 import (
 	"fmt"
 	"unsafe"
+
+	"github.com/andewx/go-iio/common"
 )
 
 type DeviceStatus int
@@ -23,37 +25,25 @@ const (
 type Device struct {
 	handle     *C.struct_iio_device
 	channels   []*Channel
-	attributes []string
+	attributes []*DeviceAttribute
 	status     DeviceStatus
-	stream     *Stream
+	_name      string
 }
 
+// NewDevice creates a new Device
 func NewDevice(handle *C.struct_iio_device) *Device {
-	return &Device{handle: handle, status: DeviceStatusUnknown, channels: make([]*Channel, 0), attributes: make([]string, 0)}
+	dev := &Device{handle: handle, status: DeviceStatusUnknown, channels: nil, attributes: nil}
+	dev._name = dev.GetName()
+	dev.init()
+
+	return dev
 }
 
 // Init - initialzes the device including reading in all channels and attributes.
-func (dev *Device) Init() error {
-	var err_ error
-	// Initialize channels
-	dev.channels = make([]*Channel, dev.GetChannelsCount())
-	for i := uint(0); i < dev.GetChannelsCount(); i++ {
-		channel, err := dev.GetChannel(i)
-		if err != nil {
-			return err
-		}
-		channel.Init()
-		dev.channels[i] = channel
-	}
-
-	// Initialize attributes
-	dev.attributes = make([]string, dev.GetAttributesCount())
-	for i := 0; i < dev.GetAttributesCount(); i++ {
-		dev.attributes[i], err_ = dev.GetAttr(i)
-		if err_ != nil {
-			return err_
-		}
-	}
+func (dev *Device) init() error {
+	common.PrintDebug(fmt.Sprintf("file iio_device.go::init--initiating|%s", dev._name), dev)
+	dev.channels = GetChannels(dev)
+	dev.attributes = GetDeviceAttributes(dev.handle)
 	return nil
 }
 
@@ -77,7 +67,7 @@ func (dev *Device) GetID() string {
 }
 
 // GetAttributes returns the attributes of the device
-func (dev *Device) GetAttributes() []string {
+func (dev *Device) GetAttributes() []*DeviceAttribute {
 	return dev.attributes
 }
 
@@ -97,19 +87,19 @@ func (dev *Device) GetChannel(index uint) (*Channel, error) {
 	if handle == nil {
 		return nil, getLastError()
 	}
-	return NewChannel(handle), nil
+	return NewChannel(handle, dev), nil
 }
 
 // GetAttr returns the value of the specified attribute
-func (dev *Device) GetAttr(index int) (string, error) {
+func (dev *Device) GetAttr(index int) (*DeviceAttribute, error) {
 	if dev.attributes != nil {
 		if index > len(dev.attributes) {
-			return "", fmt.Errorf("Error attribute index %d does not exist", index)
+			return nil, fmt.Errorf("Error attribute index %d does not exist", index)
 		}
 		return dev.attributes[index], nil
 
 	}
-	return "", fmt.Errorf("Device attribuets not initialized")
+	return nil, fmt.Errorf("Device attribuets not initialized")
 }
 
 // SetAttr sets the value of a specified attribute for the device.
@@ -154,6 +144,7 @@ func (dev *Device) SetDebugAttr(name, value string) error {
 	return nil
 }
 
+// GetAttributesCount returns the number of attributes the device has
 func (dev *Device) GetAttributesCount() int {
 	return GetDeviceAttributesCount(dev.handle)
 }

@@ -43,6 +43,20 @@ This library was developed by Brian M. Anderson for a University of Arizona proj
 
 ## Usage
 
+### Command Line Interface 
+
+```
+goiio [options] 
+Options:
+  -host | -h <host> : Set the host address
+  -name | -n <name> : Set the device name
+  -help | -h : Show this help message
+  -attrval | -av : Show the attribute value
+  -attrname | -an : Show the attribute name
+  -debug | -d : Show the debug messages
+  -verbose | -v : Show the verbose messages
+```
+
 ### Overview
 
 Here is a usage example for connecting to a networked libiio compatible device and printing the available devices presented, device attributes, channels, and channel attributes.
@@ -127,7 +141,26 @@ Note that `sdr` in this case is the go `package` `github.com/andewx/go-iio/sdr`
 
 This device is typically associate with the pluto adalm and will represent a larger category of devices eventually so we will look for a more user friendly way to handle this.
 
+To interface with another device you may be able to explore its devicetree by opening a serial connection first.
+
+```
+ls /dev/tty.*
+```
+```
+screen /dev/tty.usbserial-XXXXX 115200
+```
 
 
+### Todo
 
-
+- Full associate device and channels including the RX/TX I/Q Channels and implement the channel configuration with buffers
+- Scan device out to JSON file for documentation and parsing
+- Implement configurations with dictionary references of the device JSON data. Write attributes to device as needed.
+- Perform buffer and live tranmit and recieve tests
+- Implement throttling and rate limiting features
+- Implement device discovery features
+- Implement device configuration features
+- Implement device monitoring features
+- Implement device logging features
+- Implement device testing features
+- Implement device documentation features
