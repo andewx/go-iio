@@ -14,12 +14,32 @@ import (
 type ChannelStatus int
 
 const (
-	ChannelStatusUnknown ChannelStatus = iota
-	ChannelStatusOK
-	ChannelStatusError
-	ChannelStatusDisabled
-	ChannelStatusEnabled
+	// Unknown status
+	ChannelStatusUnknown  ChannelStatus = iota // Unknown status
+	ChannelStatusOK                            // OK status
+	ChannelStatusError                         // Error status
+	ChannelStatusDisabled                      // Disabled status
+	ChannelStatusEnabled                       // Enabled status
 )
+
+const (
+	KB = 1024      // 1024 bytes
+	MB = 1024 * KB // 1024 * 1024 bytes
+)
+
+type Endianess int
+
+const (
+	EndianessLittle Endianess = iota // Little endian
+	EndianessBig                     // Big endian
+)
+
+// DataFormat represents the format of the data in the buffer
+type DataFormat struct {
+	bits  int
+	block int
+	end   Endianess
+}
 
 // Channel represents an IIO channel
 type Channel struct {
@@ -27,14 +47,16 @@ type Channel struct {
 	attributes []*ChannelAttribute
 	status     ChannelStatus
 	device     *Device
+	buffer     *Buffer
 	output     bool
 	_name      string
 	_id        string
+	format     DataFormat
 }
 
 // NewChannel - Creates a new channel
 func NewChannel(handle *C.struct_iio_channel, dev *Device) *Channel {
-	ch := &Channel{handle: handle, status: ChannelStatusUnknown, attributes: nil, device: dev}
+	ch := &Channel{handle: handle, status: ChannelStatusUnknown, attributes: nil, device: dev, format: DataFormat{bits: 12, block: 16, end: EndianessLittle}}
 	ch.init()
 	return ch
 }
@@ -48,6 +70,23 @@ func (ch *Channel) init() error {
 	ch.status = ChannelStatusOK
 	common.PrintDebug(fmt.Sprintf("file iio_channel.go::init|%s", ch._name), ch)
 	return nil
+}
+
+// initBuffer initializes a buffer for the channel
+func (ch *Channel) initBuffer(sizeKb int) error {
+	ch.Enable()
+	buf, err := ch.device.createBuffer(sizeKb*KB, false)
+	if err != nil {
+		return err
+	}
+	ch.buffer = buf
+	return nil
+}
+
+// Open opens a buffer for the channel
+func (ch *Channel) Open(size int) error {
+	err := ch.initBuffer(size)
+	return err
 }
 
 // GetID returns the ID of the channel
@@ -67,9 +106,9 @@ func (ch *Channel) name() string {
 // DirectionalName returns the name of the channel with the direction prefix
 func (ch *Channel) DirectionalName() string {
 	if ch.output {
-		return "OUT_" + ch.Name()
+		return "out_" + ch.Name()
 	}
-	return "IN_" + ch.Name()
+	return "in_" + ch.Name()
 }
 
 // Name returns the name of the channel
@@ -99,6 +138,20 @@ func (ch *Channel) Disable() {
 	ch.status = ChannelStatusDisabled
 }
 
+// Close closes the channel and removes the buffer
+func (ch *Channel) Close() {
+	ch.Disable()
+	ch.buffer.Close()
+}
+
+func (ch *Channel) Write(data []byte) {
+	ch.buffer.Write(unsafe.Pointer(&data[0]), len(data))
+}
+
+func (ch *Channel) Read(data []byte) {
+	ch.buffer.Read(ch, unsafe.Pointer(&data[0]), len(data))
+}
+
 // IsEnabled returns true if the channel is enabled
 func (ch *Channel) IsEnabled() bool {
 	return bool(C.iio_channel_is_enabled(ch.handle))
@@ -110,13 +163,16 @@ func GetChannelsCount(dev *Device) int {
 }
 
 // GetChannels returns all channels in the device
-func GetChannels(dev *Device) []*Channel {
+func GetChannels(dev *Device) map[string]*Channel {
 	count := GetChannelsCount(dev)
 	channels := make([]*Channel, count)
+	channelsMap := make(map[string]*Channel)
 	for i := 0; i < count; i++ {
 		channels[i] = NewChannel(C.iio_device_get_channel(dev.handle, C.uint(i)), dev)
+		channels[i].init()
+		channelsMap[channels[i]._id] = channels[i]
 	}
-	return channels
+	return channelsMap
 }
 
 // GetAttr returns the value of the specified attribute

@@ -7,7 +7,9 @@ import (
 	"os"
 
 	"github.com/andewx/go-iio/common"
+	"github.com/andewx/go-iio/fft"
 	"github.com/andewx/go-iio/iio"
+	"github.com/andewx/go-iio/plot"
 	"github.com/andewx/go-iio/sdr"
 )
 
@@ -95,5 +97,13 @@ func main() {
 	}
 
 	g.Print(console)
+
+	// Configure Device and Read In Device Stream and Plot
+	iqData := g.GetSamples(1024, 2)
+	spectrum, _ := fft.FFT64(iqData)
+	grapher := plot.NewFFTPlotServer(g, spectrum)
+	fmt.Printf("Starting FFT Plot Server\n")
+	fmt.Printf("...Listening on locahost:8080\n")
+	grapher.Start()
 
 }

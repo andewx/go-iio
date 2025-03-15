@@ -24,7 +24,7 @@ const (
 // Device represents an IIO device
 type Device struct {
 	handle     *C.struct_iio_device
-	channels   []*Channel
+	channels   map[string]*Channel
 	attributes []*DeviceAttribute
 	status     DeviceStatus
 	_name      string
@@ -32,7 +32,7 @@ type Device struct {
 
 // NewDevice creates a new Device
 func NewDevice(handle *C.struct_iio_device) *Device {
-	dev := &Device{handle: handle, status: DeviceStatusUnknown, channels: nil, attributes: nil}
+	dev := &Device{handle: handle, status: DeviceStatusUnknown, channels: make(map[string]*Channel), attributes: nil}
 	dev._name = dev.GetName()
 	dev.init()
 
@@ -77,7 +77,7 @@ func (dev *Device) GetChannelsCount() uint {
 }
 
 // GetChannels returns the device channels
-func (dev *Device) GetChannels() []*Channel {
+func (dev *Device) GetChannels() map[string]*Channel {
 	return dev.channels
 }
 
@@ -88,6 +88,15 @@ func (dev *Device) GetChannel(index uint) (*Channel, error) {
 		return nil, getLastError()
 	}
 	return NewChannel(handle, dev), nil
+}
+
+// FindChannel returns the channel with the specified name
+func (dev *Device) FindChannel(name string) (*Channel, error) {
+	chn, ok := dev.channels[name]
+	if !ok {
+		return nil, fmt.Errorf("channel %s in device %s not found", name, dev._name)
+	}
+	return chn, nil
 }
 
 // GetAttr returns the value of the specified attribute

@@ -22,6 +22,8 @@ const (
 // PHYDevice - Is a Physcial Layer Device implementation of an SDR Radio
 type PHYDevice interface {
 	Close() error
+	Write(data []byte, channel string) (int, error)
+	Read(data []byte, channel string) (int, error)
 	String(options *common.ConsoleOptions) string
 }
 
@@ -54,7 +56,7 @@ Represents a software defined radio device and especially its context and high l
 */
 type SDR struct {
 	ctx      *iio.Context
-	config   Config
+	Params   Config
 	name     string
 	Platform PHYDevice
 }
@@ -63,7 +65,7 @@ type SDR struct {
 func ConnectNetwork(host string, name string) (*SDR, error) {
 	common.PrintDebug("File:sdr.go // Line:66 // Function:ConnectNetwork // Connecting to Network Device", host)
 	var s SDR
-	s = SDR{config: DefaultConfig(), name: name}
+	s = SDR{Params: DefaultConfig(), name: name}
 	ctx, err := iio.NewNetworkDevice(host) //q: how does NewNetworkDevice setup a stream..answer it doesn't we just get a stream high level wrapper struct
 	if err != nil {
 		return nil, err
@@ -128,4 +130,20 @@ func GenerateRRCFilter(numTaps int, alpha float64, symbolsPerTap float64) []floa
 func (sdr *SDR) Print(options *common.ConsoleOptions) {
 	common.PrintDebug("File:sdr.go // Line:119 // Function:Print // Printing SDR Device Tree", sdr)
 	fmt.Printf("SDR Platform %s\n%s", sdr.name, sdr.Platform.String(options))
+}
+
+// GetSamples returns a slice of float64 samples from the SDR device with a sample Byte Width description for example int16 is 2 bytes
+func (sdr *SDR) GetSamples(n int, sampleByteWidth int) []complex64 {
+	common.PrintDebug("File:sdr.go // Line:126 // Function:GetSamples // Getting Samples", sdr)
+	rxiSamples := make([]byte, n*sampleByteWidth)
+	rxqSamples := make([]byte, n*sampleByteWidth)
+	sdr.Platform.Read(rxiSamples, "rx:i")
+	sdr.Platform.Read(rxqSamples, "rx:q")
+	cmplxSamples := make([]complex64, n)
+	rxi := common.ConvertByteInt16ToFloat32(rxiSamples)
+	rxq := common.ConvertByteInt16ToFloat32(rxqSamples)
+	for i := 0; i < n; i++ {
+		cmplxSamples[i] = complex(rxi[i], rxq[i])
+	}
+	return cmplxSamples
 }

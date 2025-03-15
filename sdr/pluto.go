@@ -13,11 +13,15 @@ import (
 type AD9361 struct {
 
 	//Devices
-	ctx *iio.Context
-	phy *iio.Device
-	rx  *iio.Device
-	tx  *iio.Device
-	sdr *SDR
+	ctx  *iio.Context
+	phy  *iio.Device
+	rx   *iio.Device
+	tx   *iio.Device
+	rx_i *iio.Channel
+	rx_q *iio.Channel
+	tx_i *iio.Channel
+	tx_q *iio.Channel
+	sdr  *SDR
 
 	// RF Configuration
 	RXFrequency      uint64  // Hz
@@ -64,11 +68,35 @@ func newAD9361(ctx *iio.Context) (*AD9361, error) {
 		return nil, fmt.Errorf("failed to find TX device: %w", err)
 	}
 
+	rx_i, err := rx.FindChannel("voltage0")
+	if err != nil {
+		return nil, fmt.Errorf("failed to find RX I channel: %w", err)
+	}
+
+	rx_q, err := rx.FindChannel("voltage1")
+	if err != nil {
+		return nil, fmt.Errorf("failed to find RX Q channel: %w", err)
+	}
+
+	tx_i, err := tx.FindChannel("voltage0")
+	if err != nil {
+		return nil, fmt.Errorf("failed to find TX I channel: %w", err)
+	}
+
+	tx_q, err := tx.FindChannel("voltage1")
+	if err != nil {
+		return nil, fmt.Errorf("failed to find TX Q channel: %w", err)
+	}
+
 	dev := &AD9361{
-		ctx: ctx,
-		phy: phy,
-		rx:  rx,
-		tx:  tx,
+		ctx:  ctx,
+		phy:  phy,
+		rx:   rx,
+		tx:   tx,
+		rx_i: rx_i,
+		rx_q: rx_q,
+		tx_i: tx_i,
+		tx_q: tx_q,
 	}
 
 	return dev, nil
@@ -196,7 +224,7 @@ func (dev *AD9361) Close() error {
 // Modulate applies the specified modulation to the input samples
 func (dev *AD9361) Modulate(samples []complex64) ([]complex64, error) {
 
-	switch dev.sdr.config.Modulation {
+	switch dev.sdr.Params.Modulation {
 	case ModulationAM:
 		return dev.modulateAM(samples)
 	case ModulationFM:
@@ -229,7 +257,7 @@ func (dev *AD9361) modulateFM(samples []complex64) ([]complex64, error) {
 
 	for i, sample := range samples {
 		// FM modulation: exp(j*(wc*t + m*integral(signal)))
-		phase += dev.sdr.config.FMCoeff * float64(real(complex128(sample)))
+		phase += dev.sdr.Params.FMCoeff * float64(real(complex128(sample)))
 		output[i] = complex64(cmplx.Rect(1.0, phase))
 	}
 
@@ -238,11 +266,11 @@ func (dev *AD9361) modulateFM(samples []complex64) ([]complex64, error) {
 
 func (dev *AD9361) modulatePSK(samples []complex64) ([]complex64, error) {
 	output := make([]complex64, len(samples))
-	symbolAngle := 2 * math.Pi / float64(dev.sdr.config.PSKOrder)
+	symbolAngle := 2 * math.Pi / float64(dev.sdr.Params.PSKOrder)
 
 	for i, sample := range samples {
 		// PSK modulation: map symbols to constellation points
-		symbol := int(real(sample)) % dev.sdr.config.PSKOrder
+		symbol := int(real(sample)) % dev.sdr.Params.PSKOrder
 		angle := float64(symbol) * symbolAngle
 		output[i] = complex64(cmplx.Rect(1.0, angle))
 	}
@@ -252,12 +280,12 @@ func (dev *AD9361) modulatePSK(samples []complex64) ([]complex64, error) {
 
 func (dev *AD9361) modulateQAM(samples []complex64) ([]complex64, error) {
 	output := make([]complex64, len(samples))
-	sqrtM := int(math.Sqrt(float64(dev.sdr.config.QAMOrder)))
+	sqrtM := int(math.Sqrt(float64(dev.sdr.Params.QAMOrder)))
 	scale := 2.0 * float64(sqrtM-1)
 
 	for i, sample := range samples {
 		// QAM modulation: map symbols to square constellation
-		symbol := int(real(sample)) % dev.sdr.config.QAMOrder
+		symbol := int(real(sample)) % dev.sdr.Params.QAMOrder
 		I := float64(symbol%sqrtM)*2.0 - float64(sqrtM-1)
 		Q := float64(symbol/sqrtM)*2.0 - float64(sqrtM-1)
 		output[i] = complex64(complex(I/scale, Q/scale))
@@ -332,4 +360,71 @@ func (dev *AD9361) String(options *common.ConsoleOptions) string {
 		}
 	}
 	return strbuild
+}
+
+// Write writes data to a channel - for dev channel id the format is "dev:channel" where
+// the device is either the tx or rx device and the channel is either the i or q channel
+// i.e. "rx:i" or "tx:q" . For devices with multiple channels this is "rx2:i" or "tx2:q" etc
+func (dev *AD9361) Write(data []byte, channelName string) (int, error) {
+
+	//Find the corresponding channel
+	var channel *iio.Channel
+	switch channelName {
+	case "rx:i":
+		channel = dev.rx_i
+	case "rx:q":
+		channel = dev.rx_q
+	case "tx:i":
+		channel = dev.tx_i
+	case "tx:q":
+		channel = dev.tx_q
+	}
+
+	if channel == nil {
+		return 0, fmt.Errorf("channel not found")
+	}
+
+	// Initialize buffer if not already initialized
+	if !channel.IsEnabled() {
+		err := channel.Open(len(data) * 2) // Assuming 16-bit data
+		if err != nil {
+			return 0, fmt.Errorf("failed to initialize buffer: %w", err)
+		}
+	}
+
+	channel.Write(data)
+	return len(data), nil
+
+}
+
+// Read reads data from a channel
+func (dev *AD9361) Read(data []byte, channelName string) (int, error) {
+
+	//Find the corresponding channel
+	var channel *iio.Channel
+	switch channelName {
+	case "rx:i":
+		channel = dev.rx_i
+	case "rx:q":
+		channel = dev.rx_q
+	case "tx:i":
+		channel = dev.tx_i
+	case "tx:q":
+		channel = dev.tx_q
+	}
+
+	if channel == nil {
+		return 0, fmt.Errorf("channel not found")
+	}
+
+	// Initialize buffer if not already initialized
+	if !channel.IsEnabled() {
+		err := channel.Open(len(data) * 2) // Assuming 16-bit data
+		if err != nil {
+			return 0, fmt.Errorf("failed to initialize buffer: %w", err)
+		}
+	}
+
+	channel.Read(data)
+	return len(data), nil
 }

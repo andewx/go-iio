@@ -49,6 +49,147 @@ func FFT(x []complex128) ([]complex128, error) {
 	return out, nil
 }
 
+// FFTToReal performs Fast Fourier Transform on complex input
+// and returns the real part of the result
+// Input length must be a power of 2
+func FFTToReal(x []complex128) ([]float64, error) {
+	n := len(x)
+	if n&(n-1) != 0 {
+		return nil, fmt.Errorf("input length must be power of 2, got %d", n)
+	}
+
+	// Make a copy to avoid modifying input
+	out := make([]complex128, n)
+	copy(out, x)
+
+	// Bit-reverse permutation
+	for i := 0; i < n; i++ {
+		j := bitReverse(i, n)
+		if i < j {
+			out[i], out[j] = out[j], out[i]
+		}
+	}
+
+	// Cooley-Tukey FFT
+	for size := 2; size <= n; size *= 2 {
+		halfsize := size / 2
+		//tablestep := n / size
+
+		for i := 0; i < n; i += size {
+			for j := i; j < i+halfsize; j++ {
+				k := j + halfsize
+				temp := out[j]
+
+				// twiddle := cexp(-2π * i * j / n)
+				theta := -2.0 * math.Pi * float64(j-i) / float64(size)
+				twiddle := cmplx.Rect(1, theta)
+
+				out[j] = temp + twiddle*out[k]
+				out[k] = temp - twiddle*out[k]
+			}
+		}
+	}
+
+	result := make([]float64, n)
+	for i, v := range out {
+		result[i] = real(v)
+	}
+
+	return result, nil
+}
+
+// FFT64 performs Fast Fourier Transform on complex64 input
+// Input length must be a power of 2
+func FFT64(x []complex64) ([]complex64, error) {
+	n := len(x)
+	if n&(n-1) != 0 {
+		return nil, fmt.Errorf("input length must be power of 2, got %d", n)
+	}
+
+	// Make a copy to avoid modifying input
+	out := make([]complex64, n)
+	copy(out, x)
+
+	// Bit-reverse permutation
+	for i := 0; i < n; i++ {
+		j := bitReverse(i, n)
+		if i < j {
+			out[i], out[j] = out[j], out[i]
+		}
+	}
+
+	// Cooley-Tukey FFT
+	for size := 2; size <= n; size *= 2 {
+		halfsize := size / 2
+		//tablestep := n / size
+
+		for i := 0; i < n; i += size {
+			for j := i; j < i+halfsize; j++ {
+				k := j + halfsize
+				temp := out[j]
+
+				// twiddle := cexp(-2π * i * j / n)
+				theta := -2.0 * math.Pi * float64(j-i) / float64(size)
+				twiddle := cmplx.Rect(1, theta)
+
+				out[j] = temp + complex64(twiddle)*out[k]
+				out[k] = temp - complex64(twiddle)*out[k]
+			}
+		}
+	}
+
+	return out, nil
+}
+
+// FFT64ToReal performs Fast Fourier Transform on complex64 input
+// and returns the real part of the result
+// Input length must be a power of 2
+func FFT64ToReal(x []complex64) ([]float32, error) {
+	n := len(x)
+	if n&(n-1) != 0 {
+		return nil, fmt.Errorf("input length must be power of 2, got %d", n)
+	}
+
+	// Make a copy to avoid modifying input
+	out := make([]complex64, n)
+	copy(out, x)
+
+	// Bit-reverse permutation
+	for i := 0; i < n; i++ {
+		j := bitReverse(i, n)
+		if i < j {
+			out[i], out[j] = out[j], out[i]
+		}
+	}
+
+	// Cooley-Tukey FFT
+	for size := 2; size <= n; size *= 2 {
+		halfsize := size / 2
+		//tablestep := n / size
+
+		for i := 0; i < n; i += size {
+			for j := i; j < i+halfsize; j++ {
+				k := j + halfsize
+				temp := out[j]
+
+				// twiddle := cexp(-2π * i * j / n)
+				theta := -2.0 * math.Pi * float64(j-i) / float64(size)
+				twiddle := cmplx.Rect(1, theta)
+
+				out[j] = temp + complex64(twiddle)*out[k]
+				out[k] = temp - complex64(twiddle)*out[k]
+			}
+		}
+	}
+
+	result := make([]float32, n)
+	for i, v := range out {
+		result[i] = real(v)
+	}
+
+	return result, nil
+}
+
 // IFFT performs Inverse Fast Fourier Transform
 func IFFT(x []complex128) ([]complex128, error) {
 	n := len(x)

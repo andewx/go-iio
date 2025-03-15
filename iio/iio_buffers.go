@@ -54,7 +54,7 @@ func (b *Buffer) Step() uintptr {
 }
 
 // TransformUnsafeToBuffer will copy the data from the unsafe pointer to the buffer
-func (b *Buffer) Read(chn Channel, ptr unsafe.Pointer, size int) (int, error) {
+func (b *Buffer) Read(chn *Channel, ptr unsafe.Pointer, size int) (int, error) {
 	base := uintptr(C.iio_buffer_first(b.handle, chn.handle))
 	end := uintptr(C.iio_buffer_end(b.handle))
 	totalBytes := int(end - base)
