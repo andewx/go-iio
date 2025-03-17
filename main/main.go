@@ -113,7 +113,7 @@ func main() {
 	// Configure Device and Read In Device Stream and Plot at 10FPS
 	spectrum := make([]complex64, device.Params.BufferSize/2)
 	go device.StreamRx(40, streamRx)
-	fft.FFTSinglePrecision(spectrum)
+	fft.ComputeFramesOverlap(spectrum, 0.5, 1024)
 	grapher := plot.NewFFTPlotServer(device, 4096)
 	go grapher.Start(kill)
 	go ListenInput(kill)
